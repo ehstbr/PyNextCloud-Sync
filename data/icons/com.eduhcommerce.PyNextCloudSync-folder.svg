@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="folder" x1="20" y1="25" x2="108" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#62A0EA"/>
+      <stop offset="1" stop-color="#3584E4"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="75" y1="69" x2="112" y2="111" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#62A0EA"/>
+      <stop offset="1" stop-color="#6D4AFF"/>
+    </linearGradient>
+  </defs>
+  <path d="M10 36c0-7 5-12 12-12h30l11 12h43c7 0 12 5 12 12v9H10Z" fill="#99C1F1"/>
+  <path d="M10 47h108v52c0 8-6 14-14 14H24c-8 0-14-6-14-14Z" fill="url(#folder)"/>
+  <path d="M13 51h102" fill="none" stroke="#C0D9F7" stroke-width="3" opacity=".7"/>
+  <circle cx="94" cy="91" r="25" fill="url(#badge)" stroke="#fff" stroke-width="4"/>
+  <path d="M79 94h29c5 0 9-4 9-9 0-4-3-8-8-8-2-6-7-10-13-10-7 0-12 4-14 11-5 1-8 4-8 8 0 5 4 8 9 8Z" fill="#fff" opacity=".97" transform="translate(0 5) scale(.94)"/>
+  <path d="M84 87c3-4 7-6 11-6 4 0 7 1 9 4m-1-6 2 6-6 1" fill="none" stroke="#4B5ED7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M104 94c-2 4-6 6-11 6-3 0-6-1-9-4m1 6-2-6 6-1" fill="none" stroke="#7047EB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

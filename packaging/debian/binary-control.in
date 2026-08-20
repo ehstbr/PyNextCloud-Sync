@@ -1,0 +1,18 @@
+Package: pynextcloud-sync
+Version: @VERSION@
+Section: net
+Priority: optional
+Architecture: all
+Installed-Size: @INSTALLED_SIZE@
+Maintainer: EduhCommerce <eduhcommerce@users.noreply.github.com>
+Homepage: https://eduhcommerce.com.br
+Depends: python3 (>= 3.12), python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1, gir1.2-gdkpixbuf-2.0, gir1.2-soup-3.0, gir1.2-secret-1, gnome-keyring, libglib2.0-bin, systemd, util-linux, nextcloud-desktop-cmd
+Recommends: gnome-shell-extension-appindicator
+Description: Lightweight GTK Nextcloud synchronization client
+ PyNextCloud Sync keeps one complete physical local mirror of a Nextcloud
+ account synchronized through the official nextcloudcmd engine.
+ .
+ It provides a GNOME-style GTK4 and Libadwaita interface, browser login,
+ filesystem monitoring, server push notifications, safety intervals,
+ exclusions, daily logs, Files and Desktop integration, desktop notifications,
+ and a StatusNotifier tray.

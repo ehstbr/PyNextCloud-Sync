@@ -1,0 +1,263 @@
+pynextcloud-sync (0.1.32) stable; urgency=medium
+
+  * Raise local mass-deletion safety alerts as urgent GNOME notifications.
+  * Open the safety review directly from the desktop notification.
+  * Clear resolved or obsolete safety notifications.
+  * Keep deletion protection scoped to local changes before server propagation.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Sat, 15 Aug 2026 02:36:32 -0300
+
+pynextcloud-sync (0.1.31) stable; urgency=medium
+
+  * Persist account, storage, and basic server information across windows.
+  * Refresh remote metadata once per application process instead of per window.
+  * Refresh and persist only quota usage after each successful synchronization.
+  * Keep account and server details available for explicit manual refresh.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 12:45:00 -0300
+
+pynextcloud-sync (0.1.30) stable; urgency=medium
+
+  * Show bounded storage percentages inside the progress bar.
+  * Represent unlimited quotas with a static empty bar and infinity symbol.
+  * Remove animated progress from unlimited and unavailable storage states.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 12:00:00 -0300
+
+pynextcloud-sync (0.1.29) stable; urgency=medium
+
+  * Preserve new authorizations across temporary HTTP 429 validation limits.
+  * Reuse validated account details after reconnection and distinguish temporary
+    account-information errors from rejected credentials.
+  * Show bounded and unlimited storage usage on the main window.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 11:30:00 -0300
+
+pynextcloud-sync (0.1.28) stable; urgency=medium
+
+  * Replace the oversized reconnect status page with a compact native header.
+  * Prevent reconnect titles, descriptions, and account rows from overlapping.
+  * Keep account details and browser authorization visible without internal
+    scrolling.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 10:30:00 -0300
+
+pynextcloud-sync (0.1.27) stable; urgency=medium
+
+  * Add a dedicated Account settings page with local and remote account details.
+  * Give new browser authorizations a stable per-computer name without the app
+    version.
+  * Renew revoked credentials without resetting the folder, preferences, or
+    safety baseline.
+  * Keep authentication failures blocked until the user explicitly reconnects.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 10:00:00 -0300
+
+pynextcloud-sync (0.1.26) stable; urgency=medium
+
+  * Stop preloading every Secret Service collection item during credential lookup.
+  * Search exact server, username, and xdg:schema attributes through D-Bus.
+  * Load matching paths individually so an orphaned legacy item cannot block a
+    valid current credential.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 03:00:00 -0300
+
+pynextcloud-sync (0.1.25) stable; urgency=medium
+
+  * Renew the process-wide Secret Service proxy before verifying a successful
+    credential write.
+  * Keep setup blocked when the exact new credential is not readable through
+    the fresh connection.
+  * Add regression coverage for delayed post-write item visibility.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 02:30:00 -0300
+
+pynextcloud-sync (0.1.24) stable; urgency=medium
+
+  * Replace the ineffective bootstrap retry action with Reconnect Account when
+    no stored credential exists.
+  * Cleanly close the safety analysis and return to account login without
+    deleting the selected local folder or its files.
+  * Add a lifecycle contract for the credential-recovery navigation.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 02:00:00 -0300
+
+pynextcloud-sync (0.1.23) stable; urgency=medium
+
+  * Store new credentials under a versioned Secret Service schema so orphaned
+    legacy entries cannot intercept replacement writes.
+  * Retain legacy-schema reads and clear both schema versions on account removal.
+  * Verify every successful keyring write by reading the credential back before
+    setup continues.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 01:30:00 -0300
+
+pynextcloud-sync (0.1.22) stable; urgency=medium
+
+  * Load matching Secret Service items individually so an orphaned D-Bus path
+    cannot hide a newer valid credential.
+  * Report a missing credential instead of a persistent internal D-Bus error
+    when no valid item remains after the bounded recovery.
+  * Add regression tests for mixed stale/valid and stale-only item results.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 01:00:00 -0300
+
+pynextcloud-sync (0.1.21) stable; urgency=medium
+
+  * Recover from stale Secret Service item object paths by reconnecting once.
+  * Bound recovery to one retry and preserve unrelated error reporting.
+  * Add regression tests for successful and persistent stale-item failures.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 14 Aug 2026 00:30:00 -0300
+
+pynextcloud-sync (0.1.20) stable; urgency=medium
+
+  * Verify a native GNOME Keyring unlock by accessing the stored secret instead
+    of trusting a potentially stale D-Bus Locked property.
+  * Accept additional PyGObject unlock result shapes.
+  * Preserve the dedicated locked-keyring state when the prompt is canceled.
+  * Add a regression test for a successful unlock reported with a zero count.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Thu, 13 Aug 2026 23:30:00 -0300
+
+pynextcloud-sync (0.1.19) stable; urgency=medium
+
+  * Relicense PyNextCloud Sync under GPL-3.0-or-later.
+  * Show the GPLv3 license through GTK's native About presentation.
+  * Update project and package metadata, documentation, terms, and translations.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Tue, 11 Aug 2026 09:30:00 -0300
+
+pynextcloud-sync (0.1.18) stable; urgency=medium
+
+  * Detect and recover from inotify queue overflow before trusting new local events.
+  * Rebuild filesystem monitoring and request a protected nextcloudcmd reconciliation.
+  * Keep a minimal durable marker around uncommitted nextcloudcmd wrapper runs.
+  * Preserve nextcloudcmd as the sole file discovery and reconciliation engine.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 10 Aug 2026 14:20:00 -0300
+
+pynextcloud-sync (0.1.17) stable; urgency=medium
+
+  * Wait for the main window to map before showing the automatic update notice.
+  * Create update windows with their transient parent assigned before mapping.
+  * Recreate tray-startup notices instead of reparenting visible windows.
+  * Replace Not Now with Close Application for mandatory updates.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Sat, 08 Aug 2026 23:50:25 -0300
+
+pynextcloud-sync (0.1.16) stable; urgency=medium
+
+  * Keep the update notice above the main window across launcher activations.
+  * Keep update actions visible above the scrollable release details.
+  * Open the latest GitHub release from the Download New Version action.
+  * Add urgent mandatory-update presentation and disable Not Now when blocked.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Sat, 08 Aug 2026 23:29:46 -0300
+
+pynextcloud-sync (0.1.15) stable; urgency=medium
+
+  * Check the validated GitHub version manifest at every application start and
+    expose the same check manually from About.
+  * Keep optional updates non-blocking and prevent runtime initialization when
+    the latest version is marked mandatory.
+  * Add SemVer comparison, strict manifest validation, safe failure handling,
+    and UTC release date presentation.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Sat, 08 Aug 2026 22:51:24 -0300
+
+pynextcloud-sync (0.1.14) stable; urgency=medium
+
+  * Add a protected first synchronization with an isolated fresh server
+    snapshot, explicit merge review, and preserved conflict copies.
+  * Require existing 0.1.13 installations to create a reviewed safety baseline
+    before automatic synchronization resumes.
+  * Block missing, replaced, empty, unreadable, or abnormally reduced local
+    trees before nextcloudcmd starts; add recovery and one-time approval flows.
+  * Archive stale synchronization databases instead of silently reusing or
+    deleting them.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Sat, 08 Aug 2026 10:30:00 -0300
+
+pynextcloud-sync (0.1.13) stable; urgency=medium
+
+  * Resolve and unlock the default GNOME password collection before searching
+    for the stored Nextcloud app password after biometric desktop login.
+  * Keep canceled prompts in the dedicated locked-keyring state and add clear
+    diagnostics for collection unlock and empty credential searches.
+  * Add a regression test matching GNOME Keyring's observed startup behavior,
+    where a locked collection initially hides its credential items.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 23:59:45 -0300
+
+pynextcloud-sync (0.1.12) stable; urgency=medium
+
+  * Detect a running application by querying ownership of its live D-Bus name
+    instead of misusing gapplication list-apps as a process list.
+  * Confirm that the old instance releases its D-Bus name before unpacking and
+    restart only the desktop sessions that were active before the upgrade.
+  * Replace the inaccurate maintainer-script fixture with a regression test
+    that matches the documented GLib list-apps behavior.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 23:59:30 -0300
+
+pynextcloud-sync (0.1.11) stable; urgency=medium
+
+  * Discover running application instances from the real per-user D-Bus
+    sessions instead of relying on SUDO_UID during package upgrades.
+  * Gracefully stop every detected instance, wait for active synchronization,
+    and restart only the user sessions that were running before the upgrade.
+  * Add an executable lifecycle regression test for upgrades where APT/dpkg
+    does not propagate SUDO_UID.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 23:59:00 -0300
+
+pynextcloud-sync (0.1.10) stable; urgency=medium
+
+  * Unlock GNOME Keyring through the native Secret Service prompt after a
+    biometric desktop login.
+  * Keep canceled unlocks in a dedicated keyring state and defer automatic
+    triggers until the user explicitly retries.
+  * Resume file synchronization and notify_push after a successful unlock.
+  * Gracefully stop a running instance before interactive Debian upgrades and
+    restart the updated application in the same desktop session.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 23:45:00 -0300
+
+pynextcloud-sync (0.1.9) stable; urgency=medium
+
+  * Publish the corrected project, issue, and changelog URLs under the canonical
+    ehstbr/PyNextCloud-Sync repository.
+  * Bump the Debian version so installations of 0.1.8 receive the corrected
+    application and metadata files through a normal APT upgrade.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 22:30:00 -0300
+
+pynextcloud-sync (0.1.8) stable; urgency=medium
+
+  * Set the public website to eduhcommerce.com.br and point source, issue, and
+    documentation links to ehstbr/PyNextCloud-Sync.
+  * Add bilingual release documentation, screenshots, expanded terms, and
+    third-party project/license references.
+  * Add native Files sidebar and desktop shortcuts for the sync folder.
+  * Add a branded folder icon and independent settings for each integration.
+  * Reflect external bookmark removal without recreating the bookmark.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 21:30:00 -0300
+
+pynextcloud-sync (0.1.7) stable; urgency=medium
+
+  * Open Settings from the tray as an independent preferences window.
+  * Keep the main interface closed and unallocated while Settings is open.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 20:30:00 -0300
+
+pynextcloud-sync (0.1.6) stable; urgency=medium
+
+  * Fix opening Settings from the tray when the main window is closed.
+  * Reduce background and peak memory with lazy UI lifecycle, bounded command
+    output, bounded log buffers, and efficient daily log tail reads.
+  * Avoid redundant watcher and push reconfiguration.
+  * Remove unused and obsolete internal code.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Fri, 07 Aug 2026 19:30:00 -0300

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=PyNextCloud Sync
+Comment=Keep a physical local mirror of your Nextcloud files
+Exec=pynextcloud-sync
+Icon=com.eduhcommerce.PyNextCloudSync
+Terminal=false
+Type=Application
+Categories=Network;FileTransfer;Utility;
+Keywords=Nextcloud;Sync;Cloud;Files;
+StartupNotify=true

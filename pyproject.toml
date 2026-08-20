@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pynextcloud-sync"
+version = "0.1.32"
+description = "Lightweight GTK synchronization client for Nextcloud powered by nextcloudcmd"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "GPL-3.0-or-later"}
+authors = [{name = "EduhCommerce"}]
+keywords = ["nextcloud", "sync", "gtk4", "libadwaita", "gnome"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: X11 Applications :: GTK",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+pynextcloud-sync = "pynextcloud_sync.__main__:main"
+
+[project.urls]
+Homepage = "https://eduhcommerce.com.br"
+Repository = "https://github.com/ehstbr/PyNextCloud-Sync"
+Issues = "https://github.com/ehstbr/PyNextCloud-Sync/issues"
+Changelog = "https://github.com/ehstbr/PyNextCloud-Sync/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

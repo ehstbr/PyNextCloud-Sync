@@ -1,0 +1,52 @@
+#!/bin/sh
+set -e
+
+runtime_root="/run/user"
+state_dir="/run/pynextcloud-sync-upgrade"
+restart_file="$state_dir/restart-uids"
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database -q /usr/share/applications || true
+fi
+
+if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -q -t -f /usr/share/icons/hicolor || true
+fi
+
+if [ ! -s "$restart_file" ]; then
+    exit 0
+fi
+
+for command_name in getent runuser systemd-run; do
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+        exit 0
+    fi
+done
+
+while IFS= read -r session_uid; do
+    case "$session_uid" in
+        ''|*[!0-9]*|0)
+            continue
+            ;;
+    esac
+
+    session_user="$(getent passwd "$session_uid" 2>/dev/null | cut -d: -f1)"
+    runtime_dir="$runtime_root/$session_uid"
+    session_bus="$runtime_dir/bus"
+    if [ -z "$session_user" ] || [ ! -S "$session_bus" ]; then
+        continue
+    fi
+
+    echo "Restarting PyNextCloud Sync in user session $session_uid."
+    runuser -u "$session_user" -- env \
+        XDG_RUNTIME_DIR="$runtime_dir" \
+        DBUS_SESSION_BUS_ADDRESS="unix:path=$session_bus" \
+        systemd-run --user --collect --quiet \
+        --unit="pynextcloud-sync-update-$session_uid-$$" \
+        /usr/bin/pynextcloud-sync --background || \
+        echo "PyNextCloud Sync could not be restarted automatically in user session $session_uid; start it from the application menu." >&2
+done < "$restart_file"
+
+: > "$restart_file"
+chmod 0600 "$restart_file"
+exit 0

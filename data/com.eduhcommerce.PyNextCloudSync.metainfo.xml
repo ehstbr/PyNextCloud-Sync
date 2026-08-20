@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.eduhcommerce.PyNextCloudSync</id>
+  <name>PyNextCloud Sync</name>
+  <summary>Lightweight Nextcloud file synchronization for Linux</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>PyNextCloud Sync keeps one complete physical local mirror of a Nextcloud account synchronized through the official nextcloudcmd engine.</p>
+    <p>It adds GNOME integration, filesystem monitoring, server push notifications, safety intervals, secure account setup, exclusions, and logs.</p>
+  </description>
+  <launchable type="desktop-id">com.eduhcommerce.PyNextCloudSync.desktop</launchable>
+  <developer id="com.eduhcommerce"><name>EduhCommerce</name></developer>
+  <url type="homepage">https://eduhcommerce.com.br</url>
+  <url type="bugtracker">https://github.com/ehstbr/PyNextCloud-Sync/issues</url>
+  <url type="vcs-browser">https://github.com/ehstbr/PyNextCloud-Sync</url>
+  <releases>
+    <release version="0.1.32" date="2026-08-15">
+      <description>
+        <ul>
+          <li>Local mass-deletion safety alerts now use urgent GNOME desktop notifications.</li>
+          <li>The notification opens the safety review directly through its Review Now action.</li>
+          <li>The message explains that synchronization paused before local deletions could reach Nextcloud.</li>
+          <li>Resolved or obsolete safety notifications are removed automatically.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.31" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Account, storage, and basic server details are now persisted and shown immediately when windows open.</li>
+          <li>Remote identity and server information now refresh once when the application process starts.</li>
+          <li>Only storage usage is refreshed and persisted after each successful synchronization.</li>
+          <li>Opening Home or Settings no longer causes another authenticated quota request.</li>
+          <li>Account and server information remains available for an explicit manual refresh.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.30" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Defined quotas now show their occupied percentage inside the progress bar.</li>
+          <li>Unlimited quotas now use a static empty bar with a centered infinity symbol.</li>
+          <li>Loading and unavailable storage states no longer animate the progress bar.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.29" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Temporary HTTP 429 validation limits now preserve and retry the same new authorization.</li>
+          <li>Validated account details are reused after reconnection without an immediate duplicate authenticated request.</li>
+          <li>Temporary account-information failures are no longer described as requiring reconnection.</li>
+          <li>Storage usage is now shown on the main window for bounded and unlimited quotas.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.28" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Replaced the oversized reconnect status page with a compact native header.</li>
+          <li>Prevented reconnect titles, descriptions, and account rows from overlapping.</li>
+          <li>Kept account details and browser authorization visible without internal scrolling.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.27" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Added a dedicated Account settings page with account, authorization, local folder, quota, and server information.</li>
+          <li>New browser authorizations now use a stable per-computer name without the application version.</li>
+          <li>Revoked authorizations can be renewed without resetting the local folder, preferences, or safety baseline.</li>
+          <li>Authentication rejection remains blocked until the account is explicitly reconnected.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.26" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Stopped preloading orphaned keyring items before credential search.</li>
+          <li>Credentials are now located by an exact D-Bus search including their schema.</li>
+          <li>Matching paths are loaded individually so stale legacy items cannot block valid credentials.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.25" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Fixed false credential verification failures caused by a cached pre-write Secret Service view.</li>
+          <li>Successful writes are now verified through a fresh Secret Service connection.</li>
+          <li>Setup remains blocked if the exact stored credential is still not readable.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.24" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Fixed the dead-end safety-analysis screen shown when no stored credential exists.</li>
+          <li>Authentication failures now offer Reconnect Account instead of repeating an impossible credential lookup.</li>
+          <li>Returning to login preserves the selected local folder and all files inside it.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.23" date="2026-08-14">
+      <description>
+        <ul>
+          <li>New credentials now use a versioned Secret Service schema that cannot collide with an orphaned legacy item.</li>
+          <li>Healthy legacy credentials remain readable and both schema versions are cleared when an account is removed.</li>
+          <li>Keyring writes are verified immediately before account setup continues.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.22" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Fixed persistent credential errors when an orphaned GNOME Keyring item appeared alongside a valid credential.</li>
+          <li>Matching secrets are now loaded individually so stale D-Bus paths can be skipped safely.</li>
+          <li>Stale-only results now request authentication instead of repeatedly exposing an internal D-Bus error.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.21" date="2026-08-14">
+      <description>
+        <ul>
+          <li>Fixed repeated credential failures caused by stale GNOME Keyring D-Bus item paths.</li>
+          <li>Credential lookup now reconnects to Secret Service and retries once when the referenced item no longer exists.</li>
+          <li>Added bounded recovery and regression coverage without hiding unrelated keyring errors.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.20" date="2026-08-13">
+      <description>
+        <ul>
+          <li>Fixed the false locked-keyring state after a successful native GNOME unlock prompt.</li>
+          <li>Credential lookup now verifies the unlock by loading the stored secret instead of trusting a stale D-Bus property.</li>
+          <li>Added PyGObject return-shape compatibility and regression coverage while preserving canceled-prompt behavior.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.19" date="2026-08-11">
+      <description>
+        <ul>
+          <li>Relicensed PyNextCloud Sync under the GNU General Public License version 3 or later.</li>
+          <li>About now identifies and displays GPLv3 through GTK's native license presentation.</li>
+          <li>Updated project, Debian, AppStream, documentation, terms, and translation metadata for the new license.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.18" date="2026-08-10">
+      <description>
+        <ul>
+          <li>Recovered explicitly from inotify queue overflow by rebuilding monitoring and requesting a protected nextcloudcmd reconciliation.</li>
+          <li>Recorded a minimal durable marker around nextcloudcmd so interrupted wrapper runs remain visible until a new safety baseline is committed.</li>
+          <li>Kept synchronization semantics inside nextcloudcmd; the desktop wrapper adds no custom reconciliation engine.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.17" date="2026-08-09">
+      <description>
+        <ul>
+          <li>Fixed automatic update notices opening on another monitor at the desktop origin during normal application startup.</li>
+          <li>Update notices now wait for the main window to map before being created with the correct transient relationship.</li>
+          <li>Mandatory updates now show only Download New Version and Close Application.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.16" date="2026-08-09">
+      <description>
+        <ul>
+          <li>Kept update notices above the main window and re-presented them after launcher activations.</li>
+          <li>Moved update actions above the scrollable release details and linked downloads directly to the latest release.</li>
+          <li>Added a more urgent mandatory-update presentation with an unavailable Not Now action and a separate application exit.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.15" date="2026-08-09">
+      <description>
+        <ul>
+          <li>Added automatic update checks through a validated version manifest hosted in the GitHub repository.</li>
+          <li>Added non-blocking optional update notices and mandatory blocking before synchronization runtime initialization.</li>
+          <li>Added a manual update check in About, semantic version comparison, safe failure handling, UTC release dates, and an expandable full changelog.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.14" date="2026-08-08">
+      <description>
+        <ul>
+          <li>Added a protected first synchronization that uses a fresh isolated server snapshot before enabling bidirectional synchronization.</li>
+          <li>Added an explicit analysis and merge review for empty, populated, conflicting, and previously synchronized local folders.</li>
+          <li>Added a persistent safety baseline that blocks missing, replaced, emptied, unreadable, or abnormally reduced local trees before nextcloudcmd starts.</li>
+          <li>Added safe recovery, one-time deletion approval, preserved conflict copies, and configurable deletion review thresholds.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.13" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Fixed credential lookup after biometric GNOME login by explicitly unlocking the default password collection before searching it.</li>
+          <li>Prevented a locked Login collection from being misreported as a missing Nextcloud credential during desktop autostart.</li>
+          <li>Added diagnostics and a regression test matching the observed GNOME Keyring startup behavior.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.12" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Fixed Debian upgrade detection by querying the live D-Bus owner instead of treating list-apps as a process list.</li>
+          <li>Upgrades now confirm the old instance has exited before replacing files and restart only previously active sessions.</li>
+          <li>Replaced the inaccurate package-upgrade fixture with a regression test matching the real GLib behavior.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.11" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Fixed running-instance discovery during Debian upgrades without relying on SUDO_UID.</li>
+          <li>Upgrades now stop and restart the application through each active per-user D-Bus session.</li>
+          <li>Added an executable regression test for graceful package-upgrade shutdown and restart.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.10" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Added the native GNOME Keyring unlock prompt needed after biometric desktop login.</li>
+          <li>Kept canceled unlocks separate from invalid Nextcloud credentials and prevented repeated automatic prompts.</li>
+          <li>Resumed file synchronization and notify_push together after an explicit successful unlock.</li>
+          <li>Made interactive Debian upgrades gracefully stop and restart a running application.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.9" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Published corrected project, issue, and changelog links under the canonical ehstbr repository.</li>
+          <li>Bumped the package version so systems with 0.1.8 installed apply the corrected metadata and application files.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.8" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Added native Files sidebar and desktop shortcuts for the synchronized folder.</li>
+          <li>Added a branded folder icon and independent settings for the three integrations.</li>
+          <li>Files bookmark changes now remain consistent with the Settings window.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.7" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Settings now opens as an independent window directly from the tray.</li>
+          <li>The main window remains closed and unallocated when opening Settings.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.6" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Fixed opening Settings from the tray while the main window is closed.</li>
+          <li>Made the main interface lazy and releasable to reduce background memory.</li>
+          <li>Bounded command output, log display, activity history, and login polling.</li>
+          <li>Avoided unnecessary inotify and push reconfiguration.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.5" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Added click-to-expand activity messages and right-click copy support.</li>
+          <li>Bundled translations and fixed Brazilian Portuguese locale detection.</li>
+          <li>Completed the Brazilian Portuguese application catalog.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.4" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Made the tray icon, title, tooltip, and attention state follow synchronization state changes live.</li>
+          <li>Added compatible StatusNotifierItem and D-Bus property change notifications.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.3" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Fixed the branded tray icon on GNOME AppIndicator hosts.</li>
+          <li>Added correct icon theme metadata, an absolute SVG path, and pixel fallbacks.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.2" date="2026-08-07">
+      <description>
+        <ul>
+          <li>Responsive compact main window and collapsible activity view.</li>
+          <li>Reliable tray menu with a branded icon fallback.</li>
+          <li>Configurable daily log files and expanded About information.</li>
+          <li>Fixes for D-Bus menu variants, literal log text, and numeric formatting.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.1" date="2026-08-07"/>
+    <release version="0.1.0" date="2026-08-07"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

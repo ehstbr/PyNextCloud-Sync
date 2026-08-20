@@ -1,0 +1,16 @@
+Source: pynextcloud-sync
+Section: net
+Priority: optional
+Maintainer: EduhCommerce <eduhcommerce@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13), dh-sequence-python3, meson, python3-all, gettext
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://eduhcommerce.com.br
+
+Package: pynextcloud-sync
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1, gir1.2-gdkpixbuf-2.0, gir1.2-soup-3.0, gir1.2-secret-1, gnome-keyring, libglib2.0-bin, systemd, util-linux, nextcloud-desktop-cmd
+Recommends: gnome-shell-extension-appindicator
+Description: lightweight GTK Nextcloud synchronization client
+ Keeps one complete physical local mirror of a Nextcloud account synchronized
+ through the official nextcloudcmd engine.

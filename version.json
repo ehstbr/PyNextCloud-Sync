@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "version": "0.1.32",
+  "mandatory": false,
+  "released_at": "2026-08-15T05:36:32Z",
+  "summary": "Local mass-deletion safety alerts now use an urgent GNOME notification that opens the review directly.",
+  "changelog": [
+    "Raises local mass-deletion safety alerts as urgent GNOME desktop notifications.",
+    "Opens the safety review directly when the notification or its Review Now action is selected.",
+    "Explains that synchronization is paused before the missing local files can be deleted from Nextcloud.",
+    "Clears the desktop notification after the user approves the deletions, starts protected recovery, or removes the account.",
+    "Keeps mass-deletion protection scoped to local changes before they are propagated to the server."
+  ]
+}
