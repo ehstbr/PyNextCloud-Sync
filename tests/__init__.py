@@ -1,0 +1,2 @@
+"""PyNextCloud Sync test suite."""
+

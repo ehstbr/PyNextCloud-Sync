@@ -1,0 +1,17 @@
+src/pynextcloud_sync/application.py
+src/pynextcloud_sync/core/runtime.py
+src/pynextcloud_sync/core/scheduler.py
+src/pynextcloud_sync/core/bootstrap.py
+src/pynextcloud_sync/core/safety.py
+src/pynextcloud_sync/nextcloud/push.py
+src/pynextcloud_sync/ui/log_view.py
+src/pynextcloud_sync/ui/about.py
+src/pynextcloud_sync/ui/about_content.py
+src/pynextcloud_sync/ui/activity.py
+src/pynextcloud_sync/ui/bootstrap.py
+src/pynextcloud_sync/ui/main_window.py
+src/pynextcloud_sync/ui/reconnect.py
+src/pynextcloud_sync/ui/settings.py
+src/pynextcloud_sync/ui/setup.py
+src/pynextcloud_sync/ui/tray.py
+src/pynextcloud_sync/ui/update_window.py
