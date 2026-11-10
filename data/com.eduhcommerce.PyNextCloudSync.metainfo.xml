@@ -15,6 +15,41 @@
   <url type="bugtracker">https://github.com/ehstbr/PyNextCloud-Sync/issues</url>
   <url type="vcs-browser">https://github.com/ehstbr/PyNextCloud-Sync</url>
   <releases>
+    <release version="0.1.36" date="2026-11-10">
+      <description>
+        <ul>
+          <li>Restores missing icons in the main window, settings, and tray menu with incomplete desktop icon themes.</li>
+          <li>Registers the bundled symbols before opening windows and uses the standard scalable icon directory.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.35" date="2026-11-10">
+      <description>
+        <ul>
+          <li>Reuses tray icon data during synchronization scheduling and safety baseline checks.</li>
+          <li>Opens the window directly from the XFCE tray with the default panel settings.</li>
+          <li>Uses fallback symbols in the tray menu when the desktop theme lacks icons.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.34" date="2026-11-10">
+      <description>
+        <ul>
+          <li>Uses private symbolic fallbacks when the active icon theme does not supply an icon.</li>
+          <li>Reads nextcloudcmd output off the GTK thread and batches live log updates.</li>
+          <li>Groups filesystem notifications so large transfers leave the interface responsive.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.33" date="2026-11-10">
+      <description>
+        <ul>
+          <li>Shows progress, item counts, and a live details panel during protected synchronization.</li>
+          <li>Pauses at a completed protected copy and reuses it after the application is reopened.</li>
+          <li>Rechecks the Nextcloud folder before applying a resumed review.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.32" date="2026-08-15">
       <description>
         <ul>
