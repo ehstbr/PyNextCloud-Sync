@@ -63,3 +63,4 @@ except locale.Error:
 
 _translation = _load_translation()
 _ = _translation.gettext
+ngettext = _translation.ngettext

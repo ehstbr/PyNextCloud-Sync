@@ -13,7 +13,7 @@
     <a href="https://github.com/ehstbr/PyNextCloud-Sync/issues">Relatar um problema</a>
   </p>
   <p>
-    <img src="https://img.shields.io/badge/versão-0.1.32-6557e8?style=flat-square" alt="Versão 0.1.32">
+    <img src="https://img.shields.io/badge/versão-0.1.36-6557e8?style=flat-square" alt="Versão 0.1.36">
     <img src="https://img.shields.io/badge/plataforma-Linux-f0c674?style=flat-square&logo=linux&logoColor=111" alt="Linux">
     <img src="https://img.shields.io/badge/desktop-GNOME-4a86cf?style=flat-square&logo=gnome&logoColor=white" alt="GNOME">
     <img src="https://img.shields.io/badge/GTK-4-4a86cf?style=flat-square&logo=gtk&logoColor=white" alt="GTK 4">
@@ -117,7 +117,7 @@ Baixe o `.deb` na [versão mais recente](https://github.com/ehstbr/PyNextCloud-S
 ```bash
 cd ~/Downloads
 sudo apt update
-sudo apt install ./pynextcloud-sync_0.1.32_all.deb
+sudo apt install ./pynextcloud-sync_0.1.36_all.deb
 ```
 
 Durante uma atualização interativa iniciada com `sudo apt install`, o pacote solicita que uma instância aberta do PyNextCloud Sync seja encerrada normalmente, aguarda a sincronização atual terminar e reinicia o aplicativo atualizado na mesma sessão gráfica. O processo de sincronização nunca é encerrado à força. Atualizações automáticas ou instalações sem uma sessão gráfica identificável deixam o controle do processo para o usuário ou administrador do sistema.
@@ -140,8 +140,8 @@ sudo apt install \
 Depois, extraia e execute:
 
 ```bash
-unzip PyNextCloud-Sync-0.1.32.zip
-cd PyNextCloud-Sync-0.1.32
+unzip PyNextCloud-Sync-0.1.36.zip
+cd PyNextCloud-Sync-0.1.36
 ./run.sh
 ```
 
@@ -161,6 +161,8 @@ Durante a análise, o aplicativo usa uma pasta privada completamente nova para o
 Uma nova conta então ativa o monitoramento local, intervalo remoto de segurança de 10 minutos, push compatível, exclusões de arquivos descartáveis e inicialização automática. O aplicativo também adiciona a pasta à lateral do Arquivos, cria um link simbólico seguro na Área de Trabalho definida pelo XDG e aplica o ícone próprio. Essas integrações podem ser alteradas separadamente em **Configurações → Geral → Pasta local**.
 
 Instalações atualizadas da `0.1.13` também começam pausadas e passam por essa análise uma vez. Isso é intencional: a versão nova não considera seguro um estado antigo que ainda não possui manifesto próprio.
+
+A janela protegida mostra o progresso por etapa e a atividade recente em **Ver detalhes**. A porcentagem do download é estimada quando o servidor informa o espaço usado. **Pausar após o download** guarda a cópia protegida concluída para a próxima abertura. Ao continuar, o app refaz a revisão local e verifica o Nextcloud antes de aplicar. Uma interrupção antes de concluir a cópia reinicia o download. Uma mesclagem interrompida exige nova revisão de segurança.
 
 ## Gerenciamento da conta e da autorização
 
@@ -266,7 +268,7 @@ Contribuições são bem-vindas quando preservam o escopo enxuto, baixo consumo 
 
 ## Estado do projeto
 
-A versão `0.1.32` é uma versão de desenvolvimento destinada à avaliação. Teste primeiro com dados não críticos e mantenha sempre backups independentes dos arquivos importantes.
+A versão `0.1.36` é uma versão de desenvolvimento destinada à avaliação. Teste primeiro com dados não críticos e mantenha sempre backups independentes dos arquivos importantes.
 
 ---
 

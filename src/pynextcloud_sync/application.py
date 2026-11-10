@@ -34,7 +34,7 @@ from pynextcloud_sync.ui.setup import SetupWindow
 from pynextcloud_sync.ui.tray import StatusNotifier
 from pynextcloud_sync.ui.update_window import UpdateWindow
 from pynextcloud_sync.util.i18n import _
-from pynextcloud_sync.util.paths import project_root
+from pynextcloud_sync.util.paths import fallback_icon_theme_paths, project_root
 
 
 class PyNextCloudApplication(Adw.Application):
@@ -76,6 +76,7 @@ class PyNextCloudApplication(Adw.Application):
 
     def do_startup(self) -> None:
         Adw.Application.do_startup(self)
+        self._configure_icons()
         self.hold()
         try:
             self.config.load()
@@ -109,11 +110,6 @@ class PyNextCloudApplication(Adw.Application):
     def do_activate(self) -> None:
         first_activation = self._activation_count == 0
         self._activation_count += 1
-        display = Gdk.Display.get_default()
-        if display:
-            theme = Gtk.IconTheme.get_for_display(display)
-            theme.add_search_path(str(project_root() / "data" / "icons"))
-            theme.add_search_path(str(project_root() / "data" / "icons" / "status"))
         show_main = not (first_activation and self.background)
         if self._mandatory_update_manifest:
             self._show_update_window(self._mandatory_update_manifest)
@@ -123,6 +119,22 @@ class PyNextCloudApplication(Adw.Application):
             self._begin_startup_update_check()
             return
         self._continue_activation(show_main=show_main)
+
+    def _configure_icons(self) -> None:
+        display = Gdk.Display.get_default()
+        if not display:
+            return
+        theme = Gtk.IconTheme.get_for_display(display)
+        source = project_root() / "data" / "icons"
+        # Extend hicolor privately so the user's theme still takes precedence.
+        paths = [
+            source,
+            source / "status",
+            *fallback_icon_theme_paths(GLib.get_system_data_dirs()),
+        ]
+        for path in paths:
+            if path.is_dir():
+                theme.add_search_path(str(path))
 
     def _begin_startup_update_check(self) -> None:
         if self._startup_update_in_progress:
@@ -339,7 +351,8 @@ class PyNextCloudApplication(Adw.Application):
         if self.bootstrap_window:
             self.bootstrap_window.present()
             return
-        self._bootstrap_initialize_integrations = initialize_integrations
+        mode = self.config.data["safety"].get("bootstrap_mode")
+        self._bootstrap_initialize_integrations = initialize_integrations or mode == "setup"
         self.bootstrap_window = BootstrapWindow(
             self,
             self.config,
@@ -347,15 +360,17 @@ class PyNextCloudApplication(Adw.Application):
             self.logger,
             self._bootstrap_complete,
             self._bootstrap_reconnect_account,
-            recovery=recovery,
+            recovery=recovery or mode == "recovery",
         )
         self.bootstrap_window.present()
 
     def _bootstrap_complete(self) -> None:
+        exit_requested = False
         if self.bootstrap_window:
             old_bootstrap = self.bootstrap_window
             self.bootstrap_window = None
-            old_bootstrap.completed = True
+            exit_requested = old_bootstrap.exit_requested
+            old_bootstrap.dispose_operation()
             old_bootstrap.close()
             self.remove_window(old_bootstrap)
         self._ensure_desktop_integration()
@@ -368,18 +383,19 @@ class PyNextCloudApplication(Adw.Application):
                 self.logger.warning(
                     "Could not initialize desktop integrations: %s", ", ".join(failed)
                 )
+        self._bootstrap_initialize_integrations = False
+        if exit_requested:
+            self.quit()
+            return
         self._ensure_runtime()
         self._ensure_tray()
         self.present_main()
-        self._bootstrap_initialize_integrations = False
 
     def _bootstrap_reconnect_account(self) -> None:
         if self.bootstrap_window:
             old_bootstrap = self.bootstrap_window
             self.bootstrap_window = None
-            old_bootstrap.completed = True
-            old_bootstrap.runner.cancel()
-            old_bootstrap.runner.cleanup(old_bootstrap.analysis)
+            old_bootstrap.dispose_operation()
             old_bootstrap.close()
             self.remove_window(old_bootstrap)
         self.reconnect_account()
@@ -489,6 +505,7 @@ class PyNextCloudApplication(Adw.Application):
             return
         if not self.config.data.get("safety", {}).get("bootstrap_complete", False):
             self._ensure_bootstrap()
+            self.bootstrap_window.show_details()
             return
         self._ensure_runtime()
         self._ensure_tray()
@@ -707,10 +724,13 @@ class PyNextCloudApplication(Adw.Application):
             old_window.dispose_for_account_reset()
             old_window.close()
         self.config.data["safety"]["bootstrap_complete"] = False
+        self.config.data["safety"]["bootstrap_mode"] = "recovery"
         self.config.save()
         self._ensure_bootstrap(recovery=True, initialize_integrations=False)
 
     def request_quit(self) -> None:
+        if self.bootstrap_window and self.bootstrap_window.request_exit():
+            return
         if self.runtime and self.runtime.engine.running:
             notification = Gio.Notification.new(_("Finishing synchronization"))
             notification.set_body(
@@ -790,7 +810,7 @@ class PyNextCloudApplication(Adw.Application):
         self._safety_dialog_presenter.clear()
         self.update_checker.cancel()
         if self.bootstrap_window:
-            self.bootstrap_window.runner.cancel()
+            self.bootstrap_window.dispose_operation()
         if self.settings_window:
             self.settings_window.close()
         if self.reconnect_window:

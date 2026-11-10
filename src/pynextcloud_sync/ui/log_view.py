@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from collections import deque
+from threading import Lock
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -18,6 +21,10 @@ class LogWindow(Adw.Window):
         self.set_default_size(820, 560)
         self.logger = app_logger
         self.auto_scroll = True
+        self._pending: deque[str] = deque(maxlen=500)
+        self._pending_lock = Lock()
+        self._flush_source = 0
+        self._disposed = False
 
         toolbar = Adw.ToolbarView()
         header = Adw.HeaderBar()
@@ -59,12 +66,25 @@ class LogWindow(Adw.Window):
         self.connect("close-request", self._closed)
 
     def _append(self, line: str) -> None:
+        with self._pending_lock:
+            if self._disposed:
+                return
+            self._pending.append(line)
+            if not self._flush_source:
+                self._flush_source = GLib.timeout_add(150, self._flush)
+
+    def _flush(self) -> bool:
+        with self._pending_lock:
+            lines = tuple(self._pending)
+            self._pending.clear()
+            self._flush_source = 0
         end = self.buffer.get_end_iter()
         prefix = "\n" if self.buffer.get_char_count() else ""
-        self.buffer.insert(end, prefix + line)
+        self.buffer.insert(end, prefix + "\n".join(lines))
         self._trim_buffer()
         if self.auto_scroll:
-            GLib.idle_add(self._scroll_to_end)
+            self._scroll_to_end()
+        return GLib.SOURCE_REMOVE
 
     def _trim_buffer(self) -> None:
         line_count = self.buffer.get_line_count()
@@ -76,11 +96,10 @@ class LogWindow(Adw.Window):
         end = result[-1] if isinstance(result, tuple) else result
         self.buffer.delete(start, end)
 
-    def _scroll_to_end(self) -> bool:
+    def _scroll_to_end(self) -> None:
         mark = self.buffer.create_mark(None, self.buffer.get_end_iter(), False)
         self.view.scroll_mark_onscreen(mark)
         self.buffer.delete_mark(mark)
-        return GLib.SOURCE_REMOVE
 
     def _copy(self, _button: Gtk.Button) -> None:
         start, end = self.buffer.get_bounds()
@@ -93,5 +112,11 @@ class LogWindow(Adw.Window):
         Gio.AppInfo.launch_default_for_uri(self.logger.directory.as_uri(), None)
 
     def _closed(self, _window: Gtk.Window) -> bool:
+        with self._pending_lock:
+            self._disposed = True
+            self._pending.clear()
+            if self._flush_source:
+                GLib.source_remove(self._flush_source)
+                self._flush_source = 0
         self.unsubscribe()
         return False

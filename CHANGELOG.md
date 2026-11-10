@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.36 — 2026-11-10
+
+- Restores missing icons in the main window, settings, and tray menu with incomplete desktop icon themes.
+- Registers the bundled symbols before opening windows and uses the standard scalable icon directory.
+
+## 0.1.35 — 2026-11-10
+
+- Reuses tray icon data during synchronization scheduling and safety baseline checks.
+- Opens the window directly from the XFCE tray with the default panel settings.
+- Uses fallback symbols in the tray menu when the desktop theme lacks icons.
+
+## 0.1.34 — 2026-11-10
+
+- Uses private symbolic fallbacks when the active icon theme does not supply an icon.
+- Reads nextcloudcmd output off the GTK thread and batches live log updates.
+- Groups filesystem notifications so large transfers leave the interface responsive.
+
+## 0.1.33 — 2026-11-10
+
+- Shows progress, item counts, and a live details panel during protected synchronization.
+- Estimates download progress from staged bytes when server storage data is available.
+- Pauses at a completed protected copy and reuses it after the application is reopened.
+- Rechecks the Nextcloud folder before applying a resumed review.
+- Preserves the work area of an interrupted merge and requires a fresh safety analysis.
+- A download interrupted before the protected copy is complete starts in a new isolated folder.
+
 ## 0.1.32 — 2026-08-15
 
 - Raised local mass-deletion safety alerts as urgent GNOME desktop

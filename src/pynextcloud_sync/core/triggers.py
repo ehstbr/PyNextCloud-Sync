@@ -33,8 +33,11 @@ class CoalescingQueue:
     def __init__(self) -> None:
         self._reasons: set[Trigger] = set()
 
-    def add(self, trigger: Trigger) -> None:
+    def add(self, trigger: Trigger) -> bool:
+        if trigger in self._reasons:
+            return False
         self._reasons.add(trigger)
+        return True
 
     def extend(self, triggers: set[Trigger]) -> None:
         self._reasons.update(triggers)

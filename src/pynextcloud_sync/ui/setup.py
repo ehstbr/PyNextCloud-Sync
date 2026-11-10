@@ -20,7 +20,7 @@ from pynextcloud_sync.nextcloud.command import find_nextcloudcmd
 from pynextcloud_sync.nextcloud.device_identity import authorization_name
 from pynextcloud_sync.nextcloud.login_flow import LoginFlowResult, LoginFlowV2
 from pynextcloud_sync.storage.config import ConfigurationError, normalize_server_url
-from pynextcloud_sync.storage.remote_details import clear_remote_details
+from pynextcloud_sync.storage.remote_details import clear_remote_details, store_account_details
 from pynextcloud_sync.util.i18n import _
 from pynextcloud_sync.util.paths import default_sync_root
 
@@ -44,6 +44,7 @@ class SetupWindow(Adw.ApplicationWindow):
         self.server = ""
         self.username = ""
         self.authentication_type = "manual"
+        self._manual_details: AccountDetails | None = None
 
         toolbar = Adw.ToolbarView()
         header = Adw.HeaderBar(show_title=False)
@@ -283,7 +284,7 @@ class SetupWindow(Adw.ApplicationWindow):
 
         def validated(
             ok: bool,
-            _account_details: AccountDetails | None,
+            account_details: AccountDetails | None,
             error: Exception | None,
         ) -> None:
             self.manual_button.set_sensitive(True)
@@ -299,6 +300,7 @@ class SetupWindow(Adw.ApplicationWindow):
                 return
             self.username = username
             self.authentication_type = "manual"
+            self._manual_details = account_details
             self._store_secret(password)
 
         self.api.validate_credentials(self.server, username, password, validated)
@@ -369,7 +371,11 @@ class SetupWindow(Adw.ApplicationWindow):
         )
         self.config.data["safety"]["bootstrap_complete"] = False
         self.config.data["safety"]["bootstrap_completed_at"] = None
+        self.config.data["safety"]["bootstrap_mode"] = "setup"
         clear_remote_details(self.config)
-        self.config.save()
+        if self.authentication_type == "manual" and self._manual_details:
+            store_account_details(self.config, self._manual_details)
+        else:
+            self.config.save()
         AutostartManager().set_enabled(self.config.data["general"]["autostart"])
         self.on_complete()

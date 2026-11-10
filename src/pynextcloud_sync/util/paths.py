@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Iterable
 from pathlib import Path
 
 
@@ -60,6 +61,16 @@ def default_sync_root() -> Path:
 
 def project_root() -> Path:
     return Path(__file__).resolve().parents[3]
+
+
+def fallback_icon_theme_paths(system_data_dirs: Iterable[str]) -> list[Path]:
+    data_dirs = dict.fromkeys(
+        Path(directory) for directory in (*system_data_dirs, "/usr/local/share", "/usr/share")
+    )
+    return [
+        project_root() / "data" / "icons" / "fallback",
+        *(directory / APP_DIR / "icons" for directory in data_dirs),
+    ]
 
 
 def ensure_private_directory(path: Path) -> Path:

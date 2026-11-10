@@ -49,6 +49,8 @@ class DailyFileHandler(logging.Handler):
         return self.directory / f"{self.prefix}-{stamp.isoformat()}.log"
 
     def emit(self, record: logging.LogRecord) -> None:
+        if self._closed:
+            return
         try:
             current_date = self.date_provider()
             if self._stream is None or current_date != self._active_date:
@@ -80,10 +82,11 @@ class DailyFileHandler(logging.Handler):
                 pass
 
     def close(self) -> None:
-        if self._stream:
-            self._stream.close()
-            self._stream = None
-        super().close()
+        with self.lock:
+            if self._stream:
+                self._stream.close()
+                self._stream = None
+            super().close()
 
 
 class AppLogger:
@@ -179,6 +182,8 @@ class AppLogger:
         return self.redactor.redact(value)
 
     def _log(self, level: int, message: object, *args: object) -> None:
+        if not self.logger.isEnabledFor(level):
+            return
         safe_message = self.redactor.redact(message)
         safe_args = tuple(self._safe_argument(arg) for arg in args)
         self.logger.log(level, safe_message, *safe_args)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 import time
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -25,7 +26,6 @@ class SyncEngine:
     def __init__(self, logger: Any) -> None:
         self.logger = logger
         self.process: Gio.Subprocess | None = None
-        self._cancellable: Gio.Cancellable | None = None
 
     @property
     def running(self) -> bool:
@@ -49,50 +49,66 @@ class SyncEngine:
             return
 
         self.process = process
-        self._cancellable = Gio.Cancellable()
-        stream = Gio.DataInputStream.new(process.get_stdout_pipe())
-        capture = BoundedOutputCapture(max_lines=200)
-        status = {"stream_done": False, "process_done": False}
-
-        def maybe_finish() -> None:
-            if not status["stream_done"] or not status["process_done"]:
-                return
-            exit_code = process.get_exit_status() if process.get_if_exited() else 1
-            output = capture.output
-            duration = time.monotonic() - started
-            classification = capture.classification(exit_code)
+        worker = threading.Thread(
+            target=self._collect, args=(process, started, callback),
+            name="pynextcloud-sync-output", daemon=True,
+        )
+        try:
+            worker.start()
+        except RuntimeError as exc:
+            process.force_exit()
+            process.wait(None)
             self.process = None
-            self._cancellable = None
-            callback(SyncResult(exit_code, duration, output, classification))
+            callback(SyncResult(1, time.monotonic() - started, str(exc), "sync_error"))
 
-        def read_next() -> None:
-            stream.read_line_async(GLib.PRIORITY_DEFAULT, self._cancellable, line_ready, None)
+    def _collect(
+        self, process: Gio.Subprocess, started: float,
+        callback: Callable[[SyncResult], None],
+    ) -> None:
+        stream = process.get_stdout_pipe()
+        capture = BoundedOutputCapture(max_lines=200)
+        pending = b""
 
-        def line_ready(source: Gio.DataInputStream, result: Gio.AsyncResult, _data: object = None) -> None:
-            try:
-                line, _length = source.read_line_finish_utf8(result)
-            except GLib.Error as exc:
-                self.logger.warning("Could not read nextcloudcmd output: %s", exc)
-                line = None
-            if line is None:
-                status["stream_done"] = True
-                maybe_finish()
-                return
+        def record(raw: bytes) -> None:
+            line = raw.decode("utf-8", errors="replace").rstrip("\r")
             safe = self.logger.redactor.redact(line)
             capture.feed(safe)
             self.logger.info("CMD %s", safe)
-            read_next()
 
-        def process_ready(source: Gio.Subprocess, result: Gio.AsyncResult, _data: object = None) -> None:
+        try:
+            while chunk := stream.read_bytes(64 * 1024, None).get_data():
+                *lines, pending = (pending + chunk).split(b"\n")
+                for line in lines:
+                    record(line)
+            if pending:
+                record(pending)
+        except GLib.Error as exc:
+            self.logger.warning("Could not read nextcloudcmd output: %s", exc)
+        finally:
             try:
-                source.wait_finish(result)
+                stream.close(None)
             except GLib.Error as exc:
-                self.logger.warning("nextcloudcmd wait failed: %s", exc)
-            status["process_done"] = True
-            maybe_finish()
+                self.logger.warning("Could not close nextcloudcmd output: %s", exc)
 
-        read_next()
-        process.wait_async(self._cancellable, process_ready, None)
+        exit_code = 1
+        try:
+            process.wait(None)
+            if process.get_if_exited():
+                exit_code = process.get_exit_status()
+        except GLib.Error as exc:
+            self.logger.warning("nextcloudcmd wait failed: %s", exc)
+        result = SyncResult(
+            exit_code, time.monotonic() - started,
+            capture.output, capture.classification(exit_code),
+        )
+        GLib.idle_add(self._completed, callback, result)
+
+    def _completed(
+        self, callback: Callable[[SyncResult], None], result: SyncResult,
+    ) -> bool:
+        self.process = None
+        callback(result)
+        return GLib.SOURCE_REMOVE
 
     def cancel(self) -> None:
         if self.process is None:

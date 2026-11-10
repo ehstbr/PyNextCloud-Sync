@@ -88,7 +88,8 @@ class InotifyWatcher:
             self.root.mkdir(parents=True, exist_ok=True)
             self._add_tree(self.root)
             self.source_id = GLib.io_add_watch(
-                self.fd, GLib.IOCondition.IN | GLib.IOCondition.HUP, self._on_io
+                self.fd, GLib.PRIORITY_DEFAULT_IDLE,
+                GLib.IOCondition.IN | GLib.IOCondition.HUP, self._on_io,
             )
             self.logger.info("inotify active with %s watched directories.", self.watch_count)
         except Exception:
@@ -133,10 +134,9 @@ class InotifyWatcher:
             self.on_degraded(RuntimeError("The inotify file descriptor was closed."))
             return GLib.SOURCE_REMOVE
         try:
-            while True:
-                chunk = os.read(self.fd, 64 * 1024)
-                if not chunk:
-                    break
+            # Yield to GTK between bounded reads, even if writes are continuous.
+            chunk = os.read(self.fd, 16 * 1024)
+            if chunk:
                 self._parse(chunk)
         except BlockingIOError:
             pass
@@ -150,6 +150,7 @@ class InotifyWatcher:
 
     def _parse(self, data: bytes) -> None:
         offset = 0
+        changed = None
         while offset + EVENT_STRUCT.size <= len(data):
             wd, mask, _cookie, name_length = EVENT_STRUCT.unpack_from(data, offset)
             offset += EVENT_STRUCT.size
@@ -179,4 +180,6 @@ class InotifyWatcher:
                 self.logger.debug("Ignored disposable file event: %s", name)
                 continue
             self.logger.debug("Local change detected: %s", path)
-            self.on_change(path)
+            changed = path
+        if changed is not None:
+            self.on_change(changed)

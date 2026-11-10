@@ -10,7 +10,7 @@ from gi.repository import GdkPixbuf, Gio, GLib
 
 from pynextcloud_sync.core.state import StateSnapshot
 from pynextcloud_sync.ui.tray_state import TrayPresentation, presentation_for
-from pynextcloud_sync.util.paths import project_root
+from pynextcloud_sync.util.paths import fallback_icon_theme_paths, project_root
 from pynextcloud_sync.util.i18n import _
 
 
@@ -97,7 +97,8 @@ class StatusNotifier:
         self.revision = 1
         self.snapshot = state_controller.snapshot
         self.application_icon = self._find_application_icon()
-        self._pixmap_cache: dict[Path, list[tuple[int, int, bytes]]] = {}
+        self._pixmap_cache: dict[Path, GLib.Variant] = {}
+        self._item_properties: dict[str, GLib.Variant] | None = None
         self._unsubscribe: Callable[[], None] | None = state_controller.subscribe(
             self._state_changed
         )
@@ -133,24 +134,21 @@ class StatusNotifier:
 
     def _icon_data(
         self, presentation: TrayPresentation
-    ) -> tuple[str, str, list[tuple[int, int, bytes]]]:
+    ) -> tuple[str, str, GLib.Variant]:
         source = self._find_status_icon(presentation)
         if not source:
-            return "com.eduhcommerce.PyNextCloudSync", "", []
+            return "com.eduhcommerce.PyNextCloudSync", "", GLib.Variant("a(iiay)", [])
         pixmaps = self._pixmap_cache.get(source)
         if pixmaps is None:
-            pixmaps = self._load_application_pixmaps(source)
+            pixmaps = self._load_icon_pixmaps(source)
             self._pixmap_cache[source] = pixmaps
         return str(source), str(source.parent), pixmaps
 
-    def _load_application_pixmaps(
-        self, source: Path | None
-    ) -> list[tuple[int, int, bytes]]:
+    def _load_icon_pixmaps(self, source: Path) -> GLib.Variant:
         """Provide a branded fallback when the tray host cannot resolve IconName."""
 
-        if not source:
-            return []
-        result: list[tuple[int, int, bytes]] = []
+        pixmaps: list[GLib.Variant] = []
+        byte_type = GLib.VariantType.new("ay")
         try:
             for size in (16, 22, 32):
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
@@ -160,18 +158,28 @@ class StatusNotifier:
                 channels = pixbuf.get_n_channels()
                 rowstride = pixbuf.get_rowstride()
                 has_alpha = pixbuf.get_has_alpha()
+                width, height = pixbuf.get_width(), pixbuf.get_height()
                 argb = bytearray()
-                for y in range(pixbuf.get_height()):
-                    for x in range(pixbuf.get_width()):
+                for y in range(height):
+                    for x in range(width):
                         offset = y * rowstride + x * channels
                         red, green, blue = pixels[offset : offset + 3]
                         alpha = pixels[offset + 3] if has_alpha else 255
                         argb.extend((alpha, red, green, blue))
-                result.append((pixbuf.get_width(), pixbuf.get_height(), bytes(argb)))
+                # An ay can use the whole byte buffer. Building it element by
+                # element in PyGObject would allocate a variant for each byte.
+                pixel_data = GLib.Variant.new_from_bytes(
+                    byte_type, GLib.Bytes.new(bytes(argb)), True
+                )
+                pixmaps.append(
+                    GLib.Variant.new_tuple(
+                        GLib.Variant("i", width), GLib.Variant("i", height), pixel_data
+                    )
+                )
         except GLib.Error as exc:
             self.logger.warning("Could not create the tray icon fallback: %s", exc)
-            return []
-        return result
+            return GLib.Variant("a(iiay)", [])
+        return GLib.Variant.new_array(GLib.VariantType.new("(iiay)"), pixmaps)
 
     def start(self) -> None:
         try:
@@ -210,6 +218,7 @@ class StatusNotifier:
         if self._unsubscribe:
             self._unsubscribe()
             self._unsubscribe = None
+        self._item_properties = None
         self._pixmap_cache.clear()
 
     def _registered(self, connection: Gio.DBusConnection, result: Gio.AsyncResult, _data: object) -> None:
@@ -222,40 +231,44 @@ class StatusNotifier:
     def _item_property(
         self, _connection: Gio.DBusConnection, _sender: str, _path: str, _interface: str, name: str
     ) -> GLib.Variant:
+        if self._item_properties is None:
+            self._item_properties = self._build_item_properties()
+        return self._item_properties[name]
+
+    def _build_item_properties(self) -> dict[str, GLib.Variant]:
         presentation = presentation_for(self.snapshot.state)
-        icon_name, icon_theme_path, icon_pixmaps = self._icon_data(presentation)
+        icon_path, icon_theme_path, icon_pixmaps = self._icon_data(presentation)
+        icon_name = GLib.Variant("s", icon_path)
         state_label = _(presentation.label)
-        title = _("PyNextCloud Sync — {state}").format(state=state_label)
-        values = {
+        title = GLib.Variant(
+            "s", _("PyNextCloud Sync — {state}").format(state=state_label)
+        )
+        return {
             "Category": GLib.Variant("s", "ApplicationStatus"),
             "Id": GLib.Variant("s", "pynextcloud-sync"),
-            "Title": GLib.Variant("s", title),
+            "Title": title,
             "Status": GLib.Variant("s", presentation.status),
             "WindowId": GLib.Variant("i", 0),
             # GNOME's AppIndicator host runs outside this process. An absolute
             # path prevents it from losing the icon when the app is launched
             # directly from the ZIP and its icon theme is not installed yet.
             "IconThemePath": GLib.Variant("s", icon_theme_path),
-            "IconName": GLib.Variant("s", icon_name),
-            "IconPixmap": GLib.Variant("a(iiay)", icon_pixmaps),
+            "IconName": icon_name,
+            "IconPixmap": icon_pixmaps,
             "OverlayIconName": GLib.Variant("s", ""),
             "OverlayIconPixmap": GLib.Variant("a(iiay)", []),
-            "AttentionIconName": GLib.Variant("s", icon_name),
-            "AttentionIconPixmap": GLib.Variant("a(iiay)", icon_pixmaps),
-            "ToolTip": GLib.Variant(
-                "(sa(iiay)ss)",
-                (
-                    icon_name,
-                    icon_pixmaps,
-                    title,
-                    self.snapshot.message or state_label,
-                ),
+            "AttentionIconName": icon_name,
+            "AttentionIconPixmap": icon_pixmaps,
+            "ToolTip": GLib.Variant.new_tuple(
+                icon_name,
+                icon_pixmaps,
+                title,
+                GLib.Variant("s", self.snapshot.message or state_label),
             ),
-            # GNOME AppIndicator hosts use this to open the exported menu on one click.
-            "ItemIsMenu": GLib.Variant("b", True),
+            # Hosts can activate the window and still use the exported menu.
+            "ItemIsMenu": GLib.Variant("b", False),
             "Menu": GLib.Variant("o", "/MenuBar"),
         }
-        return values[name]
 
     def _item_method(
         self,
@@ -267,11 +280,19 @@ class StatusNotifier:
         _parameters: GLib.Variant,
         invocation: Gio.DBusMethodInvocation,
     ) -> None:
-        if method == "Activate":
-            self.actions[1]()
-        elif method == "SecondaryActivate":
-            self.actions[2]()
         invocation.return_value(None)
+        if method == "Activate":
+            self._dispatch_action(1)
+        elif method == "SecondaryActivate":
+            self._dispatch_action(2)
+
+    def _dispatch_action(self, item_id: int) -> None:
+        GLib.idle_add(self._run_action, item_id, priority=GLib.PRIORITY_DEFAULT)
+
+    def _run_action(self, item_id: int) -> bool:
+        if self.connection:
+            self.actions[item_id]()
+        return GLib.SOURCE_REMOVE
 
     def _menu_property(
         self, _connection: Gio.DBusConnection, _sender: str, _path: str, _interface: str, name: str
@@ -285,10 +306,12 @@ class StatusNotifier:
         return values[name]
 
     def _icon_theme_paths(self) -> list[str]:
+        source_icons = project_root() / "data" / "icons"
         candidates = [
-            project_root() / "data" / "icons" / "status",
+            source_icons / "status",
             Path("/usr/share/icons/hicolor/symbolic/status"),
             Path("/usr/local/share/icons/hicolor/symbolic/status"),
+            *fallback_icon_theme_paths(GLib.get_system_data_dirs()),
         ]
         return [str(path) for path in candidates if path.is_dir()]
 
@@ -367,14 +390,14 @@ class StatusNotifier:
             invocation.return_value(GLib.Variant("(v)", (value,)))
         elif method == "Event":
             item_id, event_id, _data, _timestamp = values
-            if event_id == "clicked" and item_id in self.actions:
-                self.actions[item_id]()
             invocation.return_value(None)
+            if event_id == "clicked" and item_id in self.actions:
+                self._dispatch_action(item_id)
         elif method == "EventGroup":
+            invocation.return_value(GLib.Variant("(ai)", ([],)))
             for item_id, event_id, _data, _timestamp in values[0]:
                 if event_id == "clicked" and item_id in self.actions:
-                    self.actions[item_id]()
-            invocation.return_value(GLib.Variant("(ai)", ([],)))
+                    self._dispatch_action(item_id)
         elif method == "AboutToShow":
             invocation.return_value(GLib.Variant("(b)", (False,)))
         elif method == "AboutToShowGroup":
@@ -382,6 +405,7 @@ class StatusNotifier:
 
     def _state_changed(self, snapshot: StateSnapshot) -> None:
         self.snapshot = snapshot
+        self._item_properties = None
         self.revision += 1
         if not self.connection:
             return

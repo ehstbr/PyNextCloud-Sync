@@ -1,6 +1,6 @@
 project(
   'pynextcloud-sync',
-  version: '0.1.32',
+  version: '0.1.36',
   meson_version: '>= 1.0.0',
 )
 
@@ -15,6 +15,8 @@ python_sources = files(
   'src/pynextcloud_sync/core/__init__.py',
   'src/pynextcloud_sync/core/autostart.py',
   'src/pynextcloud_sync/core/bootstrap.py',
+  'src/pynextcloud_sync/core/bootstrap_checkpoint.py',
+  'src/pynextcloud_sync/core/bootstrap_progress.py',
   'src/pynextcloud_sync/core/desktop_integration.py',
   'src/pynextcloud_sync/core/exclusions.py',
   'src/pynextcloud_sync/core/inotify.py',
@@ -79,6 +81,8 @@ python.install_sources(
     'src/pynextcloud_sync/core/__init__.py',
     'src/pynextcloud_sync/core/autostart.py',
     'src/pynextcloud_sync/core/bootstrap.py',
+    'src/pynextcloud_sync/core/bootstrap_checkpoint.py',
+    'src/pynextcloud_sync/core/bootstrap_progress.py',
     'src/pynextcloud_sync/core/desktop_integration.py',
     'src/pynextcloud_sync/core/exclusions.py',
     'src/pynextcloud_sync/core/inotify.py',
@@ -190,6 +194,12 @@ install_data(
 install_subdir(
   'data/icons/status',
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'symbolic', 'status'),
+  strip_directory: true,
+)
+
+install_subdir(
+  'data/icons/fallback',
+  install_dir: join_paths(get_option('datadir'), 'pynextcloud-sync', 'icons'),
   strip_directory: true,
 )
 

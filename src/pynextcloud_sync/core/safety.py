@@ -8,7 +8,7 @@ import stat
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from pynextcloud_sync.core.exclusions import ExclusionMatcher
 from pynextcloud_sync.util.paths import ensure_private_directory, state_dir
@@ -98,7 +98,13 @@ def find_sync_databases(root: Path) -> tuple[Path, ...]:
         return ()
 
 
-def scan_inventory(root: Path, matcher: ExclusionMatcher) -> InventorySnapshot:
+def scan_inventory(
+    root: Path,
+    matcher: ExclusionMatcher,
+    *,
+    on_entry: Callable[[int], None] | None = None,
+    check: Callable[[], None] | None = None,
+) -> InventorySnapshot:
     """Inventory a sync tree without following links or sync journal files."""
 
     root = root.expanduser().absolute()
@@ -112,6 +118,8 @@ def scan_inventory(root: Path, matcher: ExclusionMatcher) -> InventorySnapshot:
 
     stack: list[tuple[Path, str]] = [(root, "")]
     while stack:
+        if check:
+            check()
         directory, relative_directory = stack.pop()
         try:
             children = list(os.scandir(directory))
@@ -119,6 +127,8 @@ def scan_inventory(root: Path, matcher: ExclusionMatcher) -> InventorySnapshot:
             snapshot.errors.append(f"Could not read {directory}: {exc}")
             continue
         for child in children:
+            if check:
+                check()
             name = child.name
             if is_sync_database_name(name) or matcher.matches_name(name):
                 continue
@@ -148,6 +158,8 @@ def scan_inventory(root: Path, matcher: ExclusionMatcher) -> InventorySnapshot:
                 size=size,
                 modified_ns=int(details.st_mtime_ns),
             )
+            if on_entry:
+                on_entry(len(snapshot.entries))
             if kind == "directory":
                 stack.append((Path(child.path), relative))
     return snapshot

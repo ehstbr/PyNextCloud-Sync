@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pynextcloud-sync"
-version = "0.1.32"
+version = "0.1.36"
 description = "Lightweight GTK synchronization client for Nextcloud powered by nextcloudcmd"
 readme = "README.md"
 requires-python = ">=3.12"

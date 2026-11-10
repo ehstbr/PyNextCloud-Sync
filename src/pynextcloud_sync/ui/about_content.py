@@ -31,6 +31,37 @@ def terms_text() -> str:
 def release_notes_markup() -> str:
     sections = [
         (
+            _("Version 0.1.36"),
+            [
+                _("Restores missing icons in the main window, settings, and tray menu with incomplete desktop icon themes."),
+                _("Registers the bundled symbols before opening windows and uses the standard scalable icon directory."),
+            ],
+        ),
+        (
+            _("Version 0.1.35"),
+            [
+                _("Reuses tray icon data during synchronization scheduling and safety baseline checks."),
+                _("Opens the window directly from the XFCE tray with the default panel settings."),
+                _("Uses fallback symbols in the tray menu when the desktop theme lacks icons."),
+            ],
+        ),
+        (
+            _("Version 0.1.34"),
+            [
+                _("Uses private symbolic fallbacks when the active icon theme does not supply an icon."),
+                _("Reads nextcloudcmd output off the GTK thread and batches live log updates."),
+                _("Groups filesystem notifications so large transfers leave the interface responsive."),
+            ],
+        ),
+        (
+            _("Version 0.1.33"),
+            [
+                _("Shows progress, item counts, and a live details panel during protected synchronization."),
+                _("Pauses at a completed protected copy and reuses it after the application is reopened."),
+                _("Rechecks the Nextcloud folder before applying a resumed review."),
+            ],
+        ),
+        (
             _("Version 0.1.32"),
             [
                 _("Local mass-deletion safety alerts use urgent GNOME desktop notifications."),

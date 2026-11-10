@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Callable
+from xml.etree import ElementTree
 
 from .http import HttpClient, basic_authorization, parse_json
 from .models import AccountDetails, ServerDetails
@@ -53,6 +54,56 @@ class NextcloudApi:
                 callback(None, RuntimeError(f"Invalid Nextcloud response: {exc}"))
 
         self.http.request("GET", url, done, headers={"Accept": "application/json"})
+
+    def get_protected_root_properties(
+        self,
+        server: str,
+        username: str,
+        password: str,
+        callback: Callable[[str | None, int | None], None],
+    ) -> Any:
+        # The authenticated WebDAV endpoint resolves the root even when a
+        # manual login uses an alias instead of the server's internal user ID.
+        def done(status: int, body: bytes, error: Exception | None) -> None:
+            if error or status != 207 or len(body) > 65536:
+                callback(None, None)
+                return
+            try:
+                xml = ElementTree.fromstring(body)
+            except ElementTree.ParseError:
+                callback(None, None)
+                return
+            etag = None
+            used = None
+            responses = xml.findall("{DAV:}response")
+            if len(responses) == 1:
+                for propstat in responses[0].findall("{DAV:}propstat"):
+                    status_parts = (propstat.findtext("{DAV:}status") or "").split()
+                    if status_parts[1:2] != ["200"]:
+                        continue
+                    value = propstat.findtext("{DAV:}prop/{DAV:}getetag") or ""
+                    if 2 < len(value) <= 512 and value.startswith('"') and value.endswith('"'):
+                        etag = value
+                    value = propstat.findtext("{DAV:}prop/{DAV:}quota-used-bytes")
+                    if value is not None:
+                        used = self._optional_integer(value)
+            callback(etag, used)
+
+        return self.http.request(
+            "PROPFIND",
+            f"{server.rstrip('/')}/remote.php/webdav/",
+            done,
+            headers={
+                "Accept": "application/xml",
+                "Authorization": basic_authorization(username, password),
+                "Depth": "0",
+            },
+            body=(
+                b'<d:propfind xmlns:d="DAV:"><d:prop><d:getetag/>'
+                b'<d:quota-used-bytes/></d:prop></d:propfind>'
+            ),
+            content_type="application/xml",
+        )
 
     def get_account_details(
         self,

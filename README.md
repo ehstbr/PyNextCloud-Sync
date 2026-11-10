@@ -13,7 +13,7 @@
     <a href="https://github.com/ehstbr/PyNextCloud-Sync/issues">Report an issue</a>
   </p>
   <p>
-    <img src="https://img.shields.io/badge/version-0.1.32-6557e8?style=flat-square" alt="Version 0.1.32">
+    <img src="https://img.shields.io/badge/version-0.1.36-6557e8?style=flat-square" alt="Version 0.1.36">
     <img src="https://img.shields.io/badge/platform-Linux-f0c674?style=flat-square&logo=linux&logoColor=111" alt="Linux">
     <img src="https://img.shields.io/badge/desktop-GNOME-4a86cf?style=flat-square&logo=gnome&logoColor=white" alt="GNOME">
     <img src="https://img.shields.io/badge/GTK-4-4a86cf?style=flat-square&logo=gtk&logoColor=white" alt="GTK 4">
@@ -117,7 +117,7 @@ Download the `.deb` from the [latest release](https://github.com/ehstbr/PyNextCl
 ```bash
 cd ~/Downloads
 sudo apt update
-sudo apt install ./pynextcloud-sync_0.1.32_all.deb
+sudo apt install ./pynextcloud-sync_0.1.36_all.deb
 ```
 
 During an interactive upgrade started with `sudo apt install`, the package asks a running PyNextCloud Sync instance to quit normally, waits for any current synchronization to finish, and restarts the updated application in the same desktop session. It never force-kills the synchronization process. Non-interactive upgrades or installations without an identifiable desktop session leave process control to the user or system administrator.
@@ -140,8 +140,8 @@ sudo apt install \
 Then extract and run:
 
 ```bash
-unzip PyNextCloud-Sync-0.1.32.zip
-cd PyNextCloud-Sync-0.1.32
+unzip PyNextCloud-Sync-0.1.36.zip
+cd PyNextCloud-Sync-0.1.36
 ./run.sh
 ```
 
@@ -161,6 +161,8 @@ The analysis uses a completely new private folder to obtain a protected server s
 New account setup then enables local filesystem monitoring, a 10-minute remote safety interval, compatible server push, disposable-file exclusions, and autostart. It also adds the synchronized folder to the Files sidebar, creates a safe symbolic link on the XDG Desktop, and applies the PyNextCloud Sync folder icon. These integrations can be changed independently in **Settings → General → Local Folder**.
 
 Installations upgraded from `0.1.13` also start paused and go through this review once. This is intentional: the new release does not treat an older state without its own safety manifest as trusted.
+
+The protected window shows progress by phase and recent activity in **View Details**. Download percentages are estimates when the server reports space used. **Pause After Download** keeps a completed protected copy for the next launch. Continuing rebuilds the local review and checks Nextcloud again before applying. An interruption before the copy is complete starts a fresh download. An interrupted merge requires a new safety review.
 
 ## Account and authorization management
 
@@ -265,7 +267,7 @@ Contributions are welcome when they preserve the project's narrow scope, low idl
 
 ## Project status
 
-Version `0.1.32` is a development release intended for evaluation. Test it with non-critical data before relying on it for regular synchronization, and always keep independent backups of important files.
+Version `0.1.36` is a development release intended for evaluation. Test it with non-critical data before relying on it for regular synchronization, and always keep independent backups of important files.
 
 ---
 

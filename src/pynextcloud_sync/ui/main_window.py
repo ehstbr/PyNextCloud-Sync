@@ -62,7 +62,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._expanded_activity_entries: set[int] = set()
         self._pending_activity_lines: deque[str] = deque(maxlen=5)
         self._activity_lock = Lock()
-        self._activity_idle_source = 0
+        self._activity_source = 0
         self._disposed = False
 
         toolbar = Adw.ToolbarView()
@@ -324,16 +324,18 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _log_line(self, line: str) -> None:
         with self._activity_lock:
-            self._pending_activity_lines.append(line)
-            if self._activity_idle_source:
+            if self._disposed:
                 return
-            self._activity_idle_source = GLib.idle_add(self._drain_activity)
+            self._pending_activity_lines.append(line)
+            if self._activity_source:
+                return
+            self._activity_source = GLib.timeout_add(200, self._drain_activity)
 
     def _drain_activity(self) -> bool:
         with self._activity_lock:
             lines = tuple(self._pending_activity_lines)
             self._pending_activity_lines.clear()
-            self._activity_idle_source = 0
+            self._activity_source = 0
         if self._disposed:
             return GLib.SOURCE_REMOVE
         self._recent_entries.extend(parse_activity_line(line) for line in lines)
@@ -578,16 +580,16 @@ class MainWindow(Adw.ApplicationWindow):
         return False
 
     def _dispose_ui(self) -> None:
-        if self._disposed:
-            return
-        self._disposed = True
+        with self._activity_lock:
+            if self._disposed:
+                return
+            self._disposed = True
+            if self._activity_source:
+                GLib.source_remove(self._activity_source)
+                self._activity_source = 0
+            self._pending_activity_lines.clear()
         self._state_unsubscribe()
         self._log_unsubscribe()
-        if self._activity_idle_source:
-            GLib.source_remove(self._activity_idle_source)
-            self._activity_idle_source = 0
-        with self._activity_lock:
-            self._pending_activity_lines.clear()
         if self.log_window:
             self.log_window.close()
             self.log_window = None

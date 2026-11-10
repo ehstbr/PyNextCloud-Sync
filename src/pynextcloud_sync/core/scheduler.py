@@ -115,8 +115,8 @@ class SyncScheduler:
         if self.engine.running or self._preparing:
             if trigger == Trigger.LOCAL_INOTIFY:
                 self._inotify_during_sync = True
-            self.queue.add(trigger)
-            self.logger.info("Synchronization request coalesced: %s", trigger.value)
+            if self.queue.add(trigger):
+                self.logger.info("Synchronization request coalesced: %s", trigger.value)
             return
         if self.paused and trigger != Trigger.MANUAL:
             if trigger in {Trigger.LOCAL_INOTIFY, Trigger.LOCAL_INTERVAL, Trigger.LOCAL_RECOVERY}:
