@@ -38,6 +38,24 @@ class _Logger:
 
 
 class InotifyOverflowTests(unittest.TestCase):
+    def test_burst_requests_one_reconciliation_without_losing_relevant_events(self):
+        module = load_inotify_module()
+        watcher = object.__new__(module.InotifyWatcher)
+        watcher.watches = {3: "/tmp/mirror"}
+        watcher.matcher = _Matcher()
+        watcher.logger = _Logger()
+        changes = []
+        watcher.on_change = changes.append
+        names = (b"first\0", b"second\0", b"third\0")
+        batch = b"".join(
+            module.EVENT_STRUCT.pack(3, module.IN_CLOSE_WRITE, 0, len(name)) + name
+            for name in names
+        )
+
+        watcher._parse(batch)
+
+        self.assertEqual(changes, [Path("/tmp/mirror/third")])
+
     def test_overflow_is_not_discarded_as_unknown_watch_descriptor(self) -> None:
         module = load_inotify_module()
         watcher = object.__new__(module.InotifyWatcher)

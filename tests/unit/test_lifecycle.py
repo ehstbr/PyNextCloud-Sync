@@ -170,7 +170,7 @@ class LifecycleContractTests(unittest.TestCase):
         self.assertIn("self._bootstrap_reconnect_account", ensure_bootstrap)
         self.assertIn('label=_("Reconnect Account")', bootstrap_source)
         self.assertIn("credential_missing=not error", bootstrap_source)
-        self.assertIn("old_bootstrap.completed = True", reconnect)
+        self.assertIn("old_bootstrap.dispose_operation()", reconnect)
         self.assertIn("self.reconnect_account()", reconnect)
         self.assertNotIn("self.remove_account()", reconnect)
 

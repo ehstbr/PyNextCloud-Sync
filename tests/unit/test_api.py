@@ -94,6 +94,37 @@ class NextcloudApiTests(unittest.TestCase):
         self.assertIsNone(results[0][1])
         self.assertTrue(http.requests[0][1].endswith("/status.php"))
 
+    def test_protected_root_probe_only_requests_depth_zero_and_uses_successful_properties(self):
+        module = load_api_module()
+        http = FakeHttpClient([(207, b"""<d:multistatus xmlns:d="DAV:"><d:response>
+            <d:propstat><d:prop><d:getetag>"ignored"</d:getetag></d:prop>
+                <d:status>HTTP/1.1 404 Not Found</d:status></d:propstat>
+            <d:propstat><d:prop><d:getetag>"original"</d:getetag>
+                <d:quota-used-bytes>2048</d:quota-used-bytes></d:prop>
+                <d:status>HTTP/1.1 200 OK</d:status></d:propstat>
+            </d:response></d:multistatus>""", None)])
+        results = []
+        module.NextcloudApi(http).get_protected_root_properties(
+            "https://cloud.example/nextcloud/", "alice", "fixture",
+            lambda tag, used: results.append((tag, used)),
+        )
+        method, url, headers = http.requests[0]
+        self.assertEqual(method, "PROPFIND")
+        self.assertEqual(url, "https://cloud.example/nextcloud/remote.php/webdav/")
+        self.assertEqual(headers["Depth"], "0")
+        self.assertEqual(results, [('"original"', 2048)])
+
+    def test_protected_root_probe_treats_rate_limit_and_bad_xml_as_unavailable(self):
+        module = load_api_module()
+        http = FakeHttpClient([(429, b"", None), (207, b"invalid", None)])
+        results = []
+        for _ in range(2):
+            module.NextcloudApi(http).get_protected_root_properties(
+                "https://cloud.example", "alice", "fixture",
+                lambda tag, used: results.append((tag, used)),
+            )
+        self.assertEqual(results, [(None, None), (None, None)])
+
     def test_account_details_include_identity_and_quota(self) -> None:
         module = load_api_module()
         http = FakeHttpClient(

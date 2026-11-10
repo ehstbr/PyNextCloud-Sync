@@ -2,6 +2,7 @@ src/pynextcloud_sync/application.py
 src/pynextcloud_sync/core/runtime.py
 src/pynextcloud_sync/core/scheduler.py
 src/pynextcloud_sync/core/bootstrap.py
+src/pynextcloud_sync/core/bootstrap_checkpoint.py
 src/pynextcloud_sync/core/safety.py
 src/pynextcloud_sync/nextcloud/push.py
 src/pynextcloud_sync/ui/log_view.py

@@ -65,6 +65,12 @@ install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync-symbo
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync-folder.svg" "$package_root/usr/share/icons/hicolor/scalable/places/"
 install -m 0644 "$project_root/data/icons/status/"*.svg "$package_root/usr/share/icons/hicolor/symbolic/status/"
 
+fallback_dir="$package_root/usr/share/$package_name/icons/hicolor"
+install -d -m 0755 "$fallback_dir/scalable/apps"
+install -m 0644 "$project_root/data/icons/fallback/hicolor/index.theme" "$fallback_dir/"
+install -m 0644 "$project_root/data/icons/fallback/hicolor/scalable/apps/"*.svg \
+    "$fallback_dir/scalable/apps/"
+
 for language in pt_BR es; do
     install -D -m 0644 \
         "$project_root/locale/$language/LC_MESSAGES/pynextcloud-sync.mo" \

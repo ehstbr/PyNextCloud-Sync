@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PyNextCloud Sync 0.1.32\n"
+"Project-Id-Version: PyNextCloud Sync 0.1.36\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-15 01:40-0400\n"
-"PO-Revision-Date: 2026-08-15 02:36-0300\n"
+"POT-Creation-Date: 2026-11-10 10:45-0300\n"
+"PO-Revision-Date: 2026-11-10 10:45-0300\n"
 "Last-Translator: EduhCommerce\n"
 "Language-Team: Portuguese (Brazil)\n"
 "Language: pt_BR\n"
@@ -217,17 +217,9 @@ msgstr "Sincronizado"
 msgid "Creating an isolated safety snapshot…"
 msgstr "Criando uma cópia de segurança isolada…"
 
-#: src/pynextcloud_sync/core/bootstrap.py:259
-msgid "The protected staging folder was not empty."
-msgstr "A pasta temporária protegida não estava vazia."
-
 #: src/pynextcloud_sync/core/bootstrap.py:261
 msgid "Downloading a protected copy from Nextcloud…"
 msgstr "Baixando uma cópia protegida do Nextcloud…"
-
-#: src/pynextcloud_sync/core/bootstrap.py:265
-msgid "Comparing paths, sizes, dates, and file contents…"
-msgstr "Comparando caminhos, tamanhos, datas e conteúdos dos arquivos…"
 
 #: src/pynextcloud_sync/core/bootstrap.py:328
 msgid ""
@@ -252,11 +244,6 @@ msgstr "Preparando a mesclagem escolhida sem descartar nenhuma versão…"
 #: src/pynextcloud_sync/core/bootstrap.py:339
 msgid "Applying the reviewed result to Nextcloud…"
 msgstr "Aplicando ao Nextcloud o resultado revisado…"
-
-#: src/pynextcloud_sync/core/bootstrap.py:343
-msgid "Archiving old synchronization state and updating the local folder…"
-msgstr ""
-"Arquivando o estado de sincronização antigo e atualizando a pasta local…"
 
 #: src/pynextcloud_sync/core/bootstrap.py:347
 msgid "Creating a clean synchronization baseline…"
@@ -1442,18 +1429,6 @@ msgstr "Revisão de segurança"
 #: src/pynextcloud_sync/ui/bootstrap.py:56
 msgid "Safe Initial Synchronization"
 msgstr "Sincronização inicial segura"
-
-#: src/pynextcloud_sync/ui/bootstrap.py:89
-msgid "Analyzing both sides safely"
-msgstr "Analisando os dois lados com segurança"
-
-#: src/pynextcloud_sync/ui/bootstrap.py:91
-msgid ""
-"Automatic synchronization is blocked. PyNextCloud Sync is creating an "
-"isolated server snapshot before any decision is applied."
-msgstr ""
-"A sincronização automática está bloqueada. O PyNextCloud Sync está criando "
-"uma cópia isolada do servidor antes de aplicar qualquer decisão."
 
 #: src/pynextcloud_sync/ui/bootstrap.py:121
 msgid "Safety analysis could not finish"
@@ -2754,3 +2729,357 @@ msgstr "{count} alterações nesta versão"
 #~ msgstr ""
 #~ "O PyNextCloud Sync é um projeto independente e não é afiliado nem "
 #~ "endossado pela Nextcloud GmbH."
+
+#: src/pynextcloud_sync/core/bootstrap.py:178
+msgid "Comparing both folders…"
+msgstr "Comparando as duas pastas…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:236
+msgid "Verifying the final result…"
+msgstr "Verificando o resultado final…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:386
+msgid ""
+"A previous application of the merge was interrupted. Run a new safety "
+"analysis before continuing."
+msgstr "Uma aplicação anterior da mesclagem foi interrompida. Execute uma nova análise de segurança para continuar."
+
+#: src/pynextcloud_sync/core/bootstrap.py:399
+msgid "Choose a local folder separate from the app’s protected storage."
+msgstr "Escolha uma pasta local separada do armazenamento protegido do aplicativo."
+
+#: src/pynextcloud_sync/core/bootstrap.py:406
+msgid ""
+"Files on Nextcloud changed since this copy was downloaded. Download a new "
+"copy."
+msgstr "Os arquivos do Nextcloud mudaram desde que esta cópia foi baixada. Baixe uma nova cópia."
+
+#: src/pynextcloud_sync/core/bootstrap.py:410
+#: src/pynextcloud_sync/core/bootstrap.py:609
+msgid "Checking the saved protected copy…"
+msgstr "Verificando a cópia protegida salva…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:415
+#: src/pynextcloud_sync/core/bootstrap.py:613
+msgid ""
+"The saved protected copy has changed. Download a new copy before continuing."
+msgstr "A cópia protegida salva mudou. Baixe uma nova cópia para continuar."
+
+#: src/pynextcloud_sync/core/bootstrap.py:436
+msgid "Inventorying the protected copy…"
+msgstr "Inventariando a cópia protegida…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:439
+msgid "Some paths in the protected copy could not be read."
+msgstr "Não foi possível ler alguns caminhos da cópia protegida."
+
+#: src/pynextcloud_sync/core/bootstrap.py:441
+msgid "The protected copy has no synchronization journal."
+msgstr "A cópia protegida não tem um registro de sincronização."
+
+#: src/pynextcloud_sync/core/bootstrap.py:454
+msgid "Inventorying the computer folder…"
+msgstr "Inventariando a pasta do computador…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:489
+msgid ""
+"The account, local folder, or exclusions changed. Run a new safety analysis."
+msgstr "A conta, a pasta local ou as exclusões mudaram. Execute uma nova análise de segurança."
+
+#: src/pynextcloud_sync/core/bootstrap.py:505
+msgid "The interrupted merge could not be archived safely."
+msgstr "Não foi possível arquivar com segurança a mesclagem interrompida."
+
+#: src/pynextcloud_sync/core/bootstrap.py:524
+#: src/pynextcloud_sync/core/bootstrap.py:539
+msgid "Contacting Nextcloud for the protected copy…"
+msgstr "Consultando o Nextcloud para obter a cópia protegida…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:593
+msgid "Run a new safety analysis before applying the merge."
+msgstr "Execute uma nova análise de segurança antes de aplicar a mesclagem."
+
+#: src/pynextcloud_sync/core/bootstrap.py:596
+msgid ""
+"The saved copy could not be verified against Nextcloud. Download a new copy "
+"before applying the merge."
+msgstr "Não foi possível verificar a cópia salva com o Nextcloud. Baixe uma nova cópia para aplicar a mesclagem."
+
+#: src/pynextcloud_sync/core/bootstrap.py:602
+msgid "Rechecking the reviewed computer folder…"
+msgstr "Conferindo novamente a pasta local revisada…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:623
+msgid "Archiving previous synchronization state…"
+msgstr "Arquivando o estado anterior de sincronização…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:630
+msgid "Inventorying the resulting computer folder…"
+msgstr "Inventariando a pasta resultante no computador…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:633
+#: src/pynextcloud_sync/core/bootstrap.py:836
+msgid "Inventorying the reviewed result…"
+msgstr "Inventariando o resultado revisado…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:645
+msgid "Saving the verified safety baseline…"
+msgstr "Salvando a base de segurança verificada…"
+
+#: src/pynextcloud_sync/core/bootstrap.py:701
+#, python-brace-format
+msgid "Could not start nextcloudcmd: {error}"
+msgstr "Não foi possível iniciar o nextcloudcmd: {error}"
+
+#: src/pynextcloud_sync/core/bootstrap.py:717
+msgid "No diagnostic output"
+msgstr "Sem saída de diagnóstico"
+
+#: src/pynextcloud_sync/core/bootstrap.py:719
+#, python-brace-format
+msgid "nextcloudcmd failed (exit {code}): {detail}"
+msgstr "O nextcloudcmd falhou (código {code}): {detail}"
+
+#: src/pynextcloud_sync/core/bootstrap.py:841
+msgid "The reviewed copy contains unreadable or unsupported paths."
+msgstr "A cópia revisada contém caminhos ilegíveis ou incompatíveis."
+
+#: src/pynextcloud_sync/core/bootstrap.py:842
+msgid "Copying the reviewed result to the computer…"
+msgstr "Copiando o resultado revisado para o computador…"
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:47
+msgid "The protected copy changed while it was being checked."
+msgstr "A cópia protegida mudou durante a verificação."
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:56
+msgid "The protected copy has an invalid synchronization journal."
+msgstr "O registro de sincronização da cópia protegida é inválido."
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:80
+msgid ""
+"Another protected synchronization is still running. Try again after it exits."
+msgstr "Outra sincronização protegida ainda está em andamento. Tente novamente após ela terminar."
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:95
+msgid "The saved protected operation could not be read."
+msgstr "Não foi possível ler a operação protegida salva."
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:103
+msgid "The saved protected operation is invalid."
+msgstr "A operação protegida salva é inválida."
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:111
+msgid "The saved protected copy is missing."
+msgstr "A cópia protegida salva não foi encontrada."
+
+#: src/pynextcloud_sync/core/bootstrap_checkpoint.py:118
+msgid "The saved protected folder no longer matches this operation."
+msgstr "A pasta protegida salva deixou de corresponder a esta operação."
+
+#: src/pynextcloud_sync/ui/about_content.py:34
+msgid "Version 0.1.33"
+msgstr "Versão 0.1.33"
+
+#: src/pynextcloud_sync/ui/about_content.py:36
+msgid ""
+"Shows progress, item counts, and a live details panel during protected "
+"synchronization."
+msgstr "Mostra progresso, contagem de itens e um painel de detalhes ao vivo durante a sincronização protegida."
+
+#: src/pynextcloud_sync/ui/about_content.py:37
+msgid ""
+"Pauses at a completed protected copy and reuses it after the application is "
+"reopened."
+msgstr "Pausa com uma cópia protegida concluída e a reaproveita ao reabrir o aplicativo."
+
+#: src/pynextcloud_sync/ui/about_content.py:38
+msgid "Rechecks the Nextcloud folder before applying a resumed review."
+msgstr "Confere novamente a pasta do Nextcloud antes de aplicar uma revisão retomada."
+
+#: src/pynextcloud_sync/ui/bootstrap.py:94
+msgid "View Details"
+msgstr "Ver detalhes"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:128
+msgid "Copy Details"
+msgstr "Copiar detalhes"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:201
+#: src/pynextcloud_sync/ui/bootstrap.py:340
+msgid "Pause"
+msgstr "Pausar"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:215
+msgid "Protected synchronization is waiting to continue"
+msgstr "Sincronização protegida aguardando retomada"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:216
+msgid "Protected synchronization paused"
+msgstr "Sincronização protegida pausada"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:219
+msgid ""
+"Continue to check the saved operation. A completed protected copy can be "
+"reused."
+msgstr "Continue para conferir a operação salva. Uma cópia protegida concluída pode ser reaproveitada."
+
+#: src/pynextcloud_sync/ui/bootstrap.py:270
+msgid "The app will close at the next safe stopping point."
+msgstr "O aplicativo fechará no próximo ponto seguro para parar."
+
+#: src/pynextcloud_sync/ui/bootstrap.py:272
+#, python-brace-format
+msgid "Last activity {seconds} s ago"
+msgstr "Última atividade há {seconds} s"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:289
+#, python-format, python-brace-format
+msgid "{used} of about {total} · {percent}% estimated"
+msgstr "{used} de cerca de {total} · {percent}% estimado"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:295
+#, python-brace-format
+msgid "{size} downloaded"
+msgstr "{size} baixados"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:297
+#, python-brace-format
+msgid "{count} file completed"
+msgid_plural "{count} files completed"
+msgstr[0] "{count} arquivo concluído"
+msgstr[1] "{count} arquivos concluídos"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:300
+#, python-brace-format
+msgid "{size} in progress"
+msgstr "{size} em andamento"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:304
+#, python-brace-format
+msgid "{size} free on the staging drive"
+msgstr "{size} livres no volume da cópia protegida"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:310
+#, python-brace-format
+msgid "{done} of {total} items processed"
+msgstr "{done} de {total} itens processados"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:315
+#, python-brace-format
+msgid "{count} item found"
+msgid_plural "{count} items found"
+msgstr[0] "{count} item encontrado"
+msgstr[1] "{count} itens encontrados"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:326
+#, python-brace-format
+msgid "{file} · {read} of {total} read"
+msgstr "{file} · {read} de {total} lidos"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:337
+msgid "Pause Requested"
+msgstr "Pausa solicitada"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:340
+msgid "Pause After Download"
+msgstr "Pausar após o download"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:431
+#: src/pynextcloud_sync/ui/bootstrap.py:712
+msgid "Checking the Nextcloud folder…"
+msgstr "Verificando a pasta do Nextcloud…"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:508
+msgid ""
+"This review uses a saved protected copy. The app checks Nextcloud again "
+"before applying the merge."
+msgstr "Esta revisão usa uma cópia protegida salva. O aplicativo verifica o Nextcloud novamente antes de aplicar a mesclagem."
+
+#: src/pynextcloud_sync/ui/bootstrap.py:511
+msgid "Download a New Copy"
+msgstr "Baixar uma nova cópia"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:687
+msgid "Could Not Check the Saved Copy"
+msgstr "Não foi possível conferir a cópia salva"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:688
+msgid ""
+"Try applying the merge again when Nextcloud is available, or download a new "
+"copy."
+msgstr "Tente aplicar a mesclagem novamente quando o Nextcloud estiver disponível ou baixe uma nova cópia."
+
+#: src/pynextcloud_sync/ui/bootstrap.py:752
+msgid "Start a New Analysis"
+msgstr "Iniciar nova análise"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:787
+msgid "Protected Synchronization in Progress"
+msgstr "Sincronização protegida em andamento"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:788
+msgid ""
+"The operation can continue in the background. If you quit, the app waits for "
+"a safe stopping point."
+msgstr "A operação pode continuar em segundo plano. Se você sair, o aplicativo aguarda um ponto seguro para parar."
+
+#: src/pynextcloud_sync/ui/bootstrap.py:790
+msgid "Keep Open"
+msgstr "Manter aberto"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:791
+msgid "Continue in Background"
+msgstr "Continuar em segundo plano"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:793
+msgid "Finish and Quit"
+msgstr "Concluir e sair"
+
+#: src/pynextcloud_sync/ui/bootstrap.py:793
+msgid "Pause and Quit"
+msgstr "Pausar e sair"
+
+#: src/pynextcloud_sync/ui/about_content.py:34
+msgid "Version 0.1.34"
+msgstr "Versão 0.1.34"
+
+#: src/pynextcloud_sync/ui/about_content.py:36
+msgid "Uses private symbolic fallbacks when the active icon theme does not supply an icon."
+msgstr "Usa ícones simbólicos de reserva quando o tema ativo não fornece um ícone."
+
+#: src/pynextcloud_sync/ui/about_content.py:37
+msgid "Reads nextcloudcmd output off the GTK thread and batches live log updates."
+msgstr "Lê a saída do nextcloudcmd fora da thread do GTK e atualiza o log ao vivo em lotes."
+
+#: src/pynextcloud_sync/ui/about_content.py:38
+msgid "Groups filesystem notifications so large transfers leave the interface responsive."
+msgstr "Agrupa eventos do sistema de arquivos para manter a interface responsiva durante transferências grandes."
+
+#: src/pynextcloud_sync/ui/about_content.py:34
+msgid "Version 0.1.35"
+msgstr "Versão 0.1.35"
+
+#: src/pynextcloud_sync/ui/about_content.py:36
+msgid "Reuses tray icon data during synchronization scheduling and safety baseline checks."
+msgstr "Reutiliza os dados dos ícones da bandeja ao agendar a sincronização e verificar a base de segurança."
+
+#: src/pynextcloud_sync/ui/about_content.py:37
+msgid "Opens the window directly from the XFCE tray with the default panel settings."
+msgstr "Abre a janela diretamente pela bandeja do XFCE com as configurações padrão do painel."
+
+#: src/pynextcloud_sync/ui/about_content.py:38
+msgid "Uses fallback symbols in the tray menu when the desktop theme lacks icons."
+msgstr "Usa ícones de reserva no menu da bandeja quando faltam ícones no tema."
+
+#: src/pynextcloud_sync/ui/about_content.py:34
+msgid "Version 0.1.36"
+msgstr "Versão 0.1.36"
+
+#: src/pynextcloud_sync/ui/about_content.py:36
+msgid "Restores missing icons in the main window, settings, and tray menu with incomplete desktop icon themes."
+msgstr "Restaura os ícones que faltavam na janela principal, nas configurações e no menu da bandeja em temas incompletos."
+
+#: src/pynextcloud_sync/ui/about_content.py:37
+msgid "Registers the bundled symbols before opening windows and uses the standard scalable icon directory."
+msgstr "Registra os ícones incluídos antes de abrir as janelas e usa o diretório padrão de ícones escaláveis."

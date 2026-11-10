@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import importlib.util
 import sys
+import tempfile
 import types
 import unittest
 import xml.etree.ElementTree as ET
@@ -26,6 +27,22 @@ class FakeVariant:
     def __init__(self, signature: str, value: object) -> None:
         self.signature = signature
         self.value = value
+
+    @classmethod
+    def new_from_bytes(cls, signature: str, data: bytes, _trusted: bool) -> "FakeVariant":
+        return cls(signature, data)
+
+    @classmethod
+    def new_tuple(cls, *children: "FakeVariant") -> "FakeVariant":
+        signature = "(" + "".join(child.signature for child in children) + ")"
+        return cls(signature, tuple(child.value for child in children))
+
+    @classmethod
+    def new_array(cls, signature: str, children: list["FakeVariant"]) -> "FakeVariant":
+        return cls("a" + signature, [child.value for child in children])
+
+    def unpack(self) -> object:
+        return self.value
 
 
 class FakePixbuf:
@@ -71,7 +88,15 @@ def load_tray_module():
     fake_repository = types.ModuleType("gi.repository")
     fake_repository.GdkPixbuf = types.SimpleNamespace(Pixbuf=FakePixbuf)
     fake_repository.Gio = types.SimpleNamespace()
-    fake_repository.GLib = types.SimpleNamespace(Variant=FakeVariant, Error=Exception)
+    fake_repository.GLib = types.SimpleNamespace(
+        Variant=FakeVariant,
+        VariantType=types.SimpleNamespace(new=str),
+        Bytes=types.SimpleNamespace(new=bytes),
+        get_system_data_dirs=lambda: [],
+        PRIORITY_DEFAULT=0,
+        SOURCE_REMOVE=False,
+        Error=Exception,
+    )
     spec = importlib.util.spec_from_file_location(
         "pynextcloud_sync_tray_transition_test", TRAY_SOURCE
     )
@@ -121,10 +146,70 @@ class TrayContractTests(unittest.TestCase):
         self.assertEqual(property_node.attrib["type"], "i")
 
     def test_tray_publishes_dynamic_icon_and_pixmap_fallbacks(self) -> None:
-        source = TRAY_SOURCE.read_text(encoding="utf-8")
-        self.assertIn('"IconName": GLib.Variant("s", icon_name)', source)
-        self.assertIn('"IconPixmap": GLib.Variant("a(iiay)", icon_pixmaps)', source)
-        self.assertIn("self._find_status_icon(presentation)", source)
+        tray_module = load_tray_module()
+        state = StateController(AppState.SYNC_QUEUED)
+        notifier = tray_module.StatusNotifier(state, *([lambda: None] * 7), FakeLogger())
+
+        def property_value(name: str) -> FakeVariant:
+            return notifier._item_property(None, "", "", "", name)
+
+        pixmaps = property_value("IconPixmap")
+        self.assertEqual(pixmaps.signature, "a(iiay)")
+        self.assertEqual([entry[:2] for entry in pixmaps.value], [(16, 16), (22, 22), (32, 32)])
+        self.assertEqual(len(pixmaps.value[0][2]), 16 * 16 * 4)
+        self.assertIs(pixmaps, property_value("AttentionIconPixmap"))
+        self.assertTrue(property_value("IconName").value.endswith("-syncing-symbolic.svg"))
+        self.assertIs(property_value("ToolTip").value[1], pixmaps.value)
+
+        state.set(AppState.SYNC_QUEUED, "Checking the safety baseline…")
+        self.assertIs(pixmaps, property_value("IconPixmap"))
+        tooltip = property_value("ToolTip")
+        self.assertEqual(tooltip.signature, "(sa(iiay)ss)")
+        self.assertEqual(tooltip.value[3], "Checking the safety baseline…")
+        self.assertIs(tooltip, property_value("ToolTip"))
+
+    def test_item_supports_activation_and_keeps_its_menu(self) -> None:
+        tray_module = load_tray_module()
+        notifier = tray_module.StatusNotifier(
+            StateController(AppState.IDLE_OK), *([lambda: None] * 7), FakeLogger()
+        )
+        self.assertFalse(notifier._item_property(None, "", "", "", "ItemIsMenu").value)
+        self.assertEqual(notifier._item_property(None, "", "", "", "Menu").value, "/MenuBar")
+
+    def test_menu_offers_fallback_icons_to_the_panel(self) -> None:
+        tray_module = load_tray_module()
+        notifier = tray_module.StatusNotifier(
+            StateController(AppState.IDLE_OK), *([lambda: None] * 7), FakeLogger()
+        )
+        with tempfile.TemporaryDirectory() as data_dir:
+            installed = Path(data_dir) / "pynextcloud-sync" / "icons"
+            installed.mkdir(parents=True)
+            with patch.object(tray_module.GLib, "get_system_data_dirs", return_value=[data_dir]):
+                paths = notifier._menu_property(None, "", "", "", "IconThemePath").value
+            self.assertIn(str(installed), paths)
+            self.assertIn(str(TRAY_SOURCE.parents[3] / "data" / "icons" / "fallback"), paths)
+
+    def test_activation_and_menu_click_reply_before_running_window_action(self) -> None:
+        tray_module = load_tray_module()
+        events = []
+        notifier = tray_module.StatusNotifier(
+            StateController(AppState.IDLE_OK),
+            lambda: events.append("open"),
+            *([lambda: None] * 6),
+            FakeLogger(),
+        )
+        notifier.connection = FakeConnection()
+        invocation = types.SimpleNamespace(return_value=lambda _value: events.append("reply"))
+        menu_click = FakeVariant("(isvu)", (1, "clicked", None, 0))
+        with patch.object(tray_module.GLib, "idle_add", create=True) as idle_add:
+            notifier._item_method(None, "", "", "", "Activate", None, invocation)
+            notifier._menu_method(None, "", "", "", "Event", menu_click, invocation)
+            self.assertEqual(events, ["reply", "reply"])
+            self.assertEqual(idle_add.call_count, 2)
+            for call in idle_add.call_args_list:
+                callback, item_id = call.args
+                callback(item_id)
+        self.assertEqual(events, ["reply", "reply", "open", "open"])
 
     def test_every_application_state_has_a_status_asset(self) -> None:
         icon_directory = TRAY_SOURCE.parents[3] / "data" / "icons" / "status"
