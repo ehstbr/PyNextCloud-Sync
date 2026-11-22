@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.38 — 2026-11-17
+
+- Places Recent Activity below the account, local folder, and storage information.
+- Clarifies successful runs without file transfers and runs with limited command output.
+- Recognizes completed rounds from nextcloudcmd versions that omit the older completion line.
+- Keeps the status card at the same height when synchronization starts and finishes.
+- Shows deletion, move, rename, and folder creation counts in synchronization summaries.
+
+## 0.1.37 — 2026-11-17
+
+- Shows the three most recent synchronization runs on the home screen.
+- Adds an expandable activity history with confirmed uploads, downloads, and safety events.
+- Shows when a synchronization completed without file changes.
+- Keeps the detailed log available in its own tab with copy, auto-scroll, and access to daily log files.
+
 ## 0.1.36 — 2026-11-10
 
 - Restores missing icons in the main window, settings, and tray menu with incomplete desktop icon themes.

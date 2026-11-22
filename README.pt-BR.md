@@ -13,7 +13,7 @@
     <a href="https://github.com/ehstbr/PyNextCloud-Sync/issues">Relatar um problema</a>
   </p>
   <p>
-    <img src="https://img.shields.io/badge/versão-0.1.36-6557e8?style=flat-square" alt="Versão 0.1.36">
+    <img src="https://img.shields.io/badge/versão-0.1.38-6557e8?style=flat-square" alt="Versão 0.1.38">
     <img src="https://img.shields.io/badge/plataforma-Linux-f0c674?style=flat-square&logo=linux&logoColor=111" alt="Linux">
     <img src="https://img.shields.io/badge/desktop-GNOME-4a86cf?style=flat-square&logo=gnome&logoColor=white" alt="GNOME">
     <img src="https://img.shields.io/badge/GTK-4-4a86cf?style=flat-square&logo=gtk&logoColor=white" alt="GTK 4">
@@ -117,7 +117,7 @@ Baixe o `.deb` na [versão mais recente](https://github.com/ehstbr/PyNextCloud-S
 ```bash
 cd ~/Downloads
 sudo apt update
-sudo apt install ./pynextcloud-sync_0.1.36_all.deb
+sudo apt install ./pynextcloud-sync_0.1.38_all.deb
 ```
 
 Durante uma atualização interativa iniciada com `sudo apt install`, o pacote solicita que uma instância aberta do PyNextCloud Sync seja encerrada normalmente, aguarda a sincronização atual terminar e reinicia o aplicativo atualizado na mesma sessão gráfica. O processo de sincronização nunca é encerrado à força. Atualizações automáticas ou instalações sem uma sessão gráfica identificável deixam o controle do processo para o usuário ou administrador do sistema.
@@ -140,8 +140,8 @@ sudo apt install \
 Depois, extraia e execute:
 
 ```bash
-unzip PyNextCloud-Sync-0.1.36.zip
-cd PyNextCloud-Sync-0.1.36
+unzip PyNextCloud-Sync-0.1.38.zip
+cd PyNextCloud-Sync-0.1.38
 ./run.sh
 ```
 
@@ -226,7 +226,7 @@ Os quatro gatilhos automáticos podem ser combinados ou desativados. Com monitor
 
 ## Compatibilidade
 
-Atualmente testado com o [**Nextcloud Hub 26 Spring**](https://nextcloud.com/) **(34.0.1)** implantado pelo **Nextcloud AIO**.
+O projeto foi testado com o [**Nextcloud Hub 26 Spring**](https://nextcloud.com/) **(34.0.1)** implantado pelo **Nextcloud AIO**.
 
 A compatibilidade com outras instalações pode depender da versão do `nextcloudcmd`, configuração do servidor, proxy reverso, método de autenticação e aplicativos opcionais. Não há garantia de compatibilidade com versões futuras do Nextcloud.
 
@@ -244,6 +244,8 @@ Padrões contendo `/`, `\` ou `..` são rejeitados. A versão 1 não permite exc
 - Manifesto de segurança: `$XDG_STATE_HOME/pynextcloud-sync/safety-manifest.json`
 - Bancos antigos arquivados: `$XDG_STATE_HOME/pynextcloud-sync/safety-archives/`
 - Segredo da conta: GNOME Keyring ou outro provedor compatível com Secret Service
+
+A tela inicial mostra até três sincronizações recentes abaixo das informações da conta. Abra o **Histórico de sincronização** para expandir as operações confirmadas e os eventos de segurança. A aba **Log detalhado** reúne os diagnósticos. O histórico fica no computador e segue a retenção configurada. Com o salvamento de logs desativado, as novas rodadas ficam disponíveis durante a sessão.
 
 Os logs permanecem no computador, usam um arquivo por dia e são mantidos por 30 dias por padrão. Valores sensíveis são ocultados das mensagens de log geradas pelo aplicativo. Se o login biométrico deixar a carteira `Login` bloqueada, o GNOME exibe sua solicitação nativa de desbloqueio antes da sincronização. A senha do computador é tratada somente pelo GNOME; o PyNextCloud Sync não a recebe nem armazena. Cancelar a solicitação deixa o aplicativo aguardando o comando explícito **Desbloquear carteira de senhas**, sem repetir diálogos ou acusar credenciais inválidas do Nextcloud.
 
@@ -268,7 +270,7 @@ Contribuições são bem-vindas quando preservam o escopo enxuto, baixo consumo 
 
 ## Estado do projeto
 
-A versão `0.1.36` é uma versão de desenvolvimento destinada à avaliação. Teste primeiro com dados não críticos e mantenha sempre backups independentes dos arquivos importantes.
+A versão `0.1.38` é uma versão de desenvolvimento destinada à avaliação. Teste primeiro com dados não críticos e mantenha sempre backups independentes dos arquivos importantes.
 
 ---
 

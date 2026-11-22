@@ -15,6 +15,27 @@
   <url type="bugtracker">https://github.com/ehstbr/PyNextCloud-Sync/issues</url>
   <url type="vcs-browser">https://github.com/ehstbr/PyNextCloud-Sync</url>
   <releases>
+    <release version="0.1.38" date="2026-11-17">
+      <description>
+        <ul>
+          <li>Places Recent Activity below the account, local folder, and storage information.</li>
+          <li>Clarifies successful runs without file transfers and runs with limited command output.</li>
+          <li>Recognizes completed rounds from nextcloudcmd versions that omit the older completion line.</li>
+          <li>Keeps the status card at the same height when synchronization starts and finishes.</li>
+          <li>Shows deletion, move, rename, and folder creation counts in synchronization summaries.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.37" date="2026-11-17">
+      <description>
+        <ul>
+          <li>Shows the three most recent synchronization runs on the home screen.</li>
+          <li>Adds an expandable activity history with confirmed uploads, downloads, and safety events.</li>
+          <li>Shows when a synchronization completed without file changes.</li>
+          <li>Keeps the detailed log available in its own tab with copy, auto-scroll, and access to daily log files.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.36" date="2026-11-10">
       <description>
         <ul>

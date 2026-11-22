@@ -1,6 +1,6 @@
 project(
   'pynextcloud-sync',
-  version: '0.1.36',
+  version: '0.1.38',
   meson_version: '>= 1.0.0',
 )
 
@@ -34,6 +34,7 @@ python_sources = files(
   'src/pynextcloud_sync/core/updates.py',
   'src/pynextcloud_sync/core/window_presentation.py',
   'src/pynextcloud_sync/nextcloud/__init__.py',
+  'src/pynextcloud_sync/nextcloud/activity.py',
   'src/pynextcloud_sync/nextcloud/api.py',
   'src/pynextcloud_sync/nextcloud/command.py',
   'src/pynextcloud_sync/nextcloud/credentials.py',
@@ -46,6 +47,7 @@ python_sources = files(
   'src/pynextcloud_sync/nextcloud/push_protocol.py',
   'src/pynextcloud_sync/storage/__init__.py',
   'src/pynextcloud_sync/storage/config.py',
+  'src/pynextcloud_sync/storage/history.py',
   'src/pynextcloud_sync/storage/log.py',
   'src/pynextcloud_sync/storage/remote_details.py',
   'src/pynextcloud_sync/ui/__init__.py',
@@ -53,6 +55,7 @@ python_sources = files(
   'src/pynextcloud_sync/ui/about_content.py',
   'src/pynextcloud_sync/ui/activity.py',
   'src/pynextcloud_sync/ui/bootstrap.py',
+  'src/pynextcloud_sync/ui/history.py',
   'src/pynextcloud_sync/ui/log_view.py',
   'src/pynextcloud_sync/ui/main_window.py',
   'src/pynextcloud_sync/ui/reconnect.py',
@@ -106,6 +109,7 @@ python.install_sources(
 python.install_sources(
   files(
     'src/pynextcloud_sync/nextcloud/__init__.py',
+    'src/pynextcloud_sync/nextcloud/activity.py',
     'src/pynextcloud_sync/nextcloud/api.py',
     'src/pynextcloud_sync/nextcloud/command.py',
     'src/pynextcloud_sync/nextcloud/credentials.py',
@@ -124,6 +128,7 @@ python.install_sources(
   files(
     'src/pynextcloud_sync/storage/__init__.py',
     'src/pynextcloud_sync/storage/config.py',
+    'src/pynextcloud_sync/storage/history.py',
     'src/pynextcloud_sync/storage/log.py',
     'src/pynextcloud_sync/storage/remote_details.py',
   ),
@@ -137,6 +142,7 @@ python.install_sources(
     'src/pynextcloud_sync/ui/about_content.py',
     'src/pynextcloud_sync/ui/activity.py',
     'src/pynextcloud_sync/ui/bootstrap.py',
+    'src/pynextcloud_sync/ui/history.py',
     'src/pynextcloud_sync/ui/log_view.py',
     'src/pynextcloud_sync/ui/main_window.py',
     'src/pynextcloud_sync/ui/reconnect.py',

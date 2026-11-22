@@ -32,7 +32,7 @@ Nothing in the documentation, interface, logs, or release notes constitutes a gu
 
 ## 5. Compatibility and future versions
 
-The current release has been tested with [Nextcloud Hub 26 Spring](https://nextcloud.com/) **(34.0.1)** deployed with **Nextcloud AIO**.
+The project has been tested with [Nextcloud Hub 26 Spring](https://nextcloud.com/) **(34.0.1)** deployed with **Nextcloud AIO**.
 
 No guarantee is made that the Software works with every Nextcloud edition, deployment, app, authentication configuration, desktop environment, Linux distribution, `nextcloudcmd` version, or future Nextcloud release. Upstream changes may partially or completely break features without prior notice.
 

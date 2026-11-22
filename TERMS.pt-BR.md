@@ -32,7 +32,7 @@ Nenhum conteúdo da documentação, interface, logs ou notas de versão constitu
 
 ## 5. Compatibilidade e versões futuras
 
-A versão atual foi testada com o [Nextcloud Hub 26 Spring](https://nextcloud.com/) **(34.0.1)** implantado pelo **Nextcloud AIO**.
+O projeto foi testado com o [Nextcloud Hub 26 Spring](https://nextcloud.com/) **(34.0.1)** implantado pelo **Nextcloud AIO**.
 
 Não há garantia de funcionamento com todas as edições, instalações, aplicativos, configurações de autenticação, ambientes desktop, distribuições Linux, versões do `nextcloudcmd` ou versões futuras do Nextcloud. Alterações nos projetos externos podem prejudicar ou interromper recursos sem aviso prévio.
 
