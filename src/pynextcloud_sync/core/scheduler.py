@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime as dt
 import threading
+import time
 from typing import Any, Callable
 
 from gi.repository import GLib
@@ -11,8 +12,10 @@ from pynextcloud_sync.core.state import AppState, StateController
 from pynextcloud_sync.core.safety import SafetyAlert, SafetyGuard
 from pynextcloud_sync.core.sync_run_marker import SyncRunMarker
 from pynextcloud_sync.core.triggers import CoalescingQueue, Trigger, manual_only
+from pynextcloud_sync.nextcloud.activity import ActivityEvent
 from pynextcloud_sync.nextcloud.command import NextcloudCmdMissingError, build_command
 from pynextcloud_sync.nextcloud.credentials import KeyringLockedError
+from pynextcloud_sync.storage.history import SyncAttempt, SyncHistory
 from pynextcloud_sync.util.paths import config_dir
 from pynextcloud_sync.util.i18n import _
 
@@ -32,6 +35,7 @@ class SyncScheduler:
         logger: Any,
         on_completed: Callable[[SyncResult], None] | None = None,
         on_safety_alert: Callable[[SafetyAlert], None] | None = None,
+        history: SyncHistory | None = None,
     ) -> None:
         self.config = config
         self.credentials = credentials
@@ -40,6 +44,9 @@ class SyncScheduler:
         self.logger = logger
         self.on_completed = on_completed
         self.on_safety_alert = on_safety_alert
+        self.history = history
+        self._active_attempt: SyncAttempt | None = None
+        self.safety_history_id: str | None = None
         self.queue = CoalescingQueue()
         self.online = True
         self.user_paused = False
@@ -189,6 +196,7 @@ class SyncScheduler:
         self.logger.info("Synchronization triggers: %s", reason_text)
         safety = self.config.data.get("safety")
         if safety and safety.get("guard_enabled", True) and not self._safety_bypass_once:
+            attempt = SyncAttempt.start() if self.history else None
             if self.run_marker.pending_for(account):
                 self.logger.warning(
                     "A previous synchronization did not reach a committed safety baseline; validating the last known-good baseline before recovery."
@@ -205,7 +213,7 @@ class SyncScheduler:
                     alert = None
                     error = exc
                 GLib.idle_add(
-                    lambda: self._safety_checked(alert, error, account, reasons)
+                    self._safety_checked, alert, error, account, reasons, attempt,
                 )
 
             threading.Thread(
@@ -224,6 +232,7 @@ class SyncScheduler:
         error: Exception | None,
         account: dict[str, Any],
         reasons: set[Trigger],
+        attempt: SyncAttempt | None = None,
     ) -> bool:
         if self._stopped:
             return GLib.SOURCE_REMOVE
@@ -241,6 +250,9 @@ class SyncScheduler:
                 self.queue.add(reason)
             self.state.set(AppState.SAFETY_REVIEW, _(alert.message))
             self.logger.critical("Synchronization blocked by safety guard: %s", alert.reason)
+            if self.history and attempt:
+                self.safety_history_id = attempt.id
+                self.history.record(attempt, "blocked", reason=_(alert.message))
             if self.on_safety_alert:
                 self.on_safety_alert(alert)
             return GLib.SOURCE_REMOVE
@@ -278,6 +290,7 @@ class SyncScheduler:
                 return
             self._keyring_locked = False
             self.logger.add_secret(password)
+            attempt = SyncAttempt.start() if self.history else None
             sync = self.config.data["sync"]
             matcher = ExclusionMatcher(
                 sync.get("exclude_patterns", []), sync.get("exclude_patterns_enabled", True)
@@ -294,6 +307,8 @@ class SyncScheduler:
             except NextcloudCmdMissingError as exc:
                 self.state.set(AppState.ERROR, str(exc))
                 self.logger.error(exc)
+                if self.history and attempt:
+                    self.history.record(attempt, "failed", reason=_("nextcloudcmd could not be started."))
                 return
             safety = self.config.data.get("safety")
             if safety and safety.get("guard_enabled", True):
@@ -306,9 +321,15 @@ class SyncScheduler:
                         "Synchronization blocked because the run marker could not be persisted: %s",
                         exc,
                     )
+                    if self.history and attempt:
+                        self.history.record(
+                            attempt, "failed",
+                            reason=_("The synchronization safety marker could not be saved."),
+                        )
                     return
             feedback_followup = self._feedback_followup_pending
             self._feedback_followup_pending = False
+            self._active_attempt = attempt
             self.engine.run(
                 spec,
                 lambda result: self._finished(result, reasons, feedback_followup),
@@ -324,6 +345,10 @@ class SyncScheduler:
     ) -> None:
         if self._stopped:
             return
+        attempt = self._active_attempt
+        self._active_attempt = None
+        if self.history and attempt:
+            self._record_result(attempt, result)
         self.config.data["runtime"]["last_exit_code"] = result.exit_code
         self.logger.info("nextcloudcmd exited with code %s after %.1f seconds.", result.exit_code, result.duration)
         if result.successful:
@@ -344,6 +369,9 @@ class SyncScheduler:
                 except Exception as exc:
                     self.logger.error("Could not commit the safety baseline: %s", exc)
                 finally:
+                    if self.history and attempt:
+                        kind = "baseline" if recorded else "baseline_failed"
+                        self.history.add_event(attempt.id, ActivityEvent(kind, time.time()))
                     GLib.idle_add(self._baseline_recorded, recorded)
 
             threading.Thread(
@@ -377,6 +405,22 @@ class SyncScheduler:
         self._inotify_during_sync = False
         self._cooldown_source = GLib.timeout_add_seconds(
             self.COOLDOWN_SECONDS, self._cooldown_finished, queued
+        )
+
+    def _record_result(self, attempt: SyncAttempt, result: SyncResult) -> None:
+        reason = ""
+        if result.interrupted:
+            outcome = "interrupted"
+        elif result.successful:
+            outcome = "conflict" if result.classification == "conflict" else "completed"
+        else:
+            outcome = "failed"
+            if result.classification == "authentication":
+                reason = _("Reconnect the Nextcloud account to resume synchronization")
+            elif result.exit_code == 127:
+                reason = _("nextcloudcmd could not be started.")
+        self.history.record(
+            attempt, outcome, result.activity, reason=reason, exit_code=result.exit_code,
         )
 
     def _baseline_recorded(self, recorded: bool) -> bool:
@@ -490,6 +534,7 @@ class SyncScheduler:
             self.safety_alert.reason,
         )
         self.safety_alert = None
+        self.safety_history_id = None
         self._safety_bypass_once = True
         self.request(Trigger.MANUAL)
 
@@ -505,5 +550,11 @@ class SyncScheduler:
         self.remote_pending = False
         self._feedback_followup_pending = False
         self.safety_alert = None
+        self.safety_history_id = None
         if self.engine.running:
+            if self.history and self._active_attempt:
+                self.history.record(
+                    self._active_attempt, "interrupted", self.engine.interrupted_activity(),
+                )
+                self._active_attempt = None
             self.engine.cancel()

@@ -1,44 +1,118 @@
 from __future__ import annotations
 
-import re
-from dataclasses import dataclass
+import datetime as dt
+
+from gi.repository import Adw, Gtk
+
+from pynextcloud_sync.nextcloud.activity import ActivityEvent
+from pynextcloud_sync.storage.history import SyncSummary
+from pynextcloud_sync.util.i18n import _, ngettext
 
 
-LOG_LINE = re.compile(
-    r"^\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+"
-    r"(?P<level>DEBUG|INFO|WARNING|ERROR|CRITICAL)\s+(?P<message>.*)$"
-)
+_OUTCOMES = {
+    "completed": (_("Synchronization completed"), "emblem-ok-symbolic", "success"),
+    "conflict": (_("Synchronization completed with conflicts"), "dialog-warning-symbolic", "warning"),
+    "failed": (_("Synchronization failed"), "dialog-error-symbolic", "error"),
+    "interrupted": (_("Synchronization interrupted"), "media-playback-pause-symbolic", "warning"),
+    "blocked": (_("Synchronization blocked for safety"), "security-high-symbolic", "warning"),
+}
 
-
-LEVEL_ICONS = {
-    "DEBUG": "utilities-terminal-symbolic",
-    "INFO": "dialog-information-symbolic",
-    "WARNING": "dialog-warning-symbolic",
-    "ERROR": "dialog-error-symbolic",
-    "CRITICAL": "software-update-urgent-symbolic",
+_FILE_EVENTS = {
+    "download": (_("Downloaded"), "go-down-symbolic"),
+    "upload": (_("Uploaded"), "go-up-symbolic"),
+    "remove": (_("Removed"), "user-trash-symbolic"),
+    "rename": (_("Moved or renamed"), "document-open-recent-symbolic"),
+    "mkdir": (_("Folder created"), "folder-symbolic"),
 }
 
 
-@dataclass(frozen=True)
-class ActivityEntry:
-    level: str
-    message: str
-    icon_name: str
+def _summary_text(entry: SyncSummary) -> str:
+    parts = []
+    if entry.downloads:
+        parts.append("↓ " + ngettext(
+            "{count} file downloaded", "{count} files downloaded", entry.downloads,
+        ).format(count=entry.downloads))
+    if entry.uploads:
+        parts.append("↑ " + ngettext(
+            "{count} file uploaded", "{count} files uploaded", entry.uploads,
+        ).format(count=entry.uploads))
+    if entry.removals:
+        parts.append(ngettext(
+            "{count} deletion", "{count} deletions", entry.removals,
+        ).format(count=entry.removals))
+    if entry.renames:
+        parts.append(ngettext(
+            "{count} item moved or renamed", "{count} items moved or renamed", entry.renames,
+        ).format(count=entry.renames))
+    if entry.folders_created:
+        parts.append(ngettext(
+            "{count} folder created", "{count} folders created", entry.folders_created,
+        ).format(count=entry.folders_created))
+    other_changes = entry.other_changes - entry.removals - entry.renames - entry.folders_created
+    if other_changes > 0:
+        parts.append(ngettext(
+            "{count} other change", "{count} other changes", other_changes,
+        ).format(count=other_changes))
+
+    if entry.reason:
+        parts.append(entry.reason)
+    elif entry.outcome == "completed" and not parts:
+        return (
+            _("No files needed synchronization")
+            if entry.complete else _("No file transfers recorded")
+        )
+    elif entry.outcome == "failed" and entry.exit_code is not None:
+        parts.append(_("Exit code {code}. See the detailed log.").format(code=entry.exit_code))
+    elif entry.outcome == "completed" and not entry.complete:
+        parts.insert(0, _("Recorded file activity"))
+    elif entry.outcome == "conflict":
+        parts.append(_("See the detailed log for conflicts."))
+    return " · ".join(parts)
 
 
-def parse_activity_line(line: str) -> ActivityEntry:
-    """Turn one formatted application log line into a compact UI entry."""
+def _time_label(value: float, *, seconds: bool = False) -> Gtk.Label:
+    stamp = dt.datetime.fromtimestamp(value)
+    label = Gtk.Label(
+        label=stamp.strftime("%H:%M:%S" if seconds else "%H:%M"),
+        valign=Gtk.Align.CENTER, css_classes=["dim-label", "numeric"],
+    )
+    label.set_tooltip_text(stamp.strftime("%x %H:%M:%S"))
+    return label
 
-    match = LOG_LINE.match(line.strip())
-    if match:
-        level = match.group("level")
-        message = match.group("message").strip()
+
+def summary_row(entry: SyncSummary, row: Adw.ActionRow | Adw.ExpanderRow) -> None:
+    title, icon, style = _OUTCOMES[entry.outcome]
+    row.set_use_markup(False)
+    row.set_title(title)
+    row.set_subtitle(_summary_text(entry))
+    image = Gtk.Image(icon_name=icon, css_classes=[style])
+    row.add_prefix(image)
+    row.add_suffix(_time_label(entry.ended_at))
+
+
+def event_row(event: ActivityEvent) -> Adw.ActionRow:
+    if event.kind in _FILE_EVENTS:
+        action, icon = _FILE_EVENTS[event.kind]
+        folder, _slash, title = event.detail.rpartition("/")
+        subtitle = f"{action} · {folder}" if folder else action
+    elif event.kind == "baseline":
+        title, subtitle, icon = (
+            _("Safety baseline updated"),
+            _("A reference of local files was saved to detect unexpected deletions."),
+            "security-high-symbolic",
+        )
     else:
-        level = "INFO"
-        message = line.strip()
-
-    if level == "INFO" and "completed successfully" in message.casefold():
-        icon_name = "emblem-ok-symbolic"
-    else:
-        icon_name = LEVEL_ICONS.get(level, "dialog-information-symbolic")
-    return ActivityEntry(level=level, message=message, icon_name=icon_name)
+        title, subtitle, icon = (
+            _("Safety baseline could not be updated"),
+            _("See the detailed log for the safety baseline error."),
+            "dialog-warning-symbolic",
+        )
+    child = Adw.ActionRow(title=title, subtitle=subtitle, use_markup=False)
+    image = Gtk.Image(icon_name=icon)
+    if event.kind in {"download", "upload"}:
+        image.add_css_class("accent")
+    child.add_prefix(image)
+    child.add_suffix(_time_label(event.at, seconds=True))
+    if event.detail:
+        child.set_tooltip_text(event.detail)
+    return child

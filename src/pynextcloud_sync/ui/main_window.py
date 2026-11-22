@@ -1,25 +1,24 @@
 from __future__ import annotations
 
 import datetime as dt
-from collections import deque
 from pathlib import Path
-from threading import Lock
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
+from gi.repository import Adw, Gio, GLib, Gtk, Pango
 
 from pynextcloud_sync import APP_NAME
 from pynextcloud_sync.core.state import AppState, StateSnapshot
 from pynextcloud_sync.nextcloud.api import AccountDetails
+from pynextcloud_sync.storage.history import SyncSummary
 from pynextcloud_sync.storage.remote_details import cached_storage_usage
 from pynextcloud_sync.util.i18n import _
 
 from .about import show_about_dialog
-from .activity import ActivityEntry, parse_activity_line
-from .log_view import LogWindow
+from .activity import summary_row
+from .history import HistoryWindow
 
 
 STATE_PRESENTATION = {
@@ -54,15 +53,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.config = config
         self.runtime = runtime
         self.logger = logger
-        self.log_window: LogWindow | None = None
-        self._recent_entries: list[ActivityEntry] = [
-            parse_activity_line(line) for line in logger.recent_lines(5)
-        ]
+        self.history_window: HistoryWindow | None = None
         self._activity_rows: list[Gtk.ListBoxRow] = []
-        self._expanded_activity_entries: set[int] = set()
-        self._pending_activity_lines: deque[str] = deque(maxlen=5)
-        self._activity_lock = Lock()
-        self._activity_source = 0
+        self._safety_review_active = False
         self._disposed = False
 
         toolbar = Adw.ToolbarView()
@@ -113,11 +106,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.status_title = Gtk.Label(xalign=0, css_classes=["title-3"])
         self.status_title.set_ellipsize(Pango.EllipsizeMode.END)
         self.status_title.set_single_line_mode(True)
-        self.status_description = Gtk.Label(xalign=0, css_classes=["dim-label"])
-        self.status_description.set_ellipsize(Pango.EllipsizeMode.END)
-        self.status_description.set_single_line_mode(True)
+        self.status_subtitle = Gtk.Label(xalign=0, css_classes=["dim-label", "caption"])
+        self.status_subtitle.set_ellipsize(Pango.EllipsizeMode.END)
+        self.status_subtitle.set_single_line_mode(True)
         status_text.append(self.status_title)
-        status_text.append(self.status_description)
+        status_text.append(self.status_subtitle)
         status_box.append(status_text)
         self.status_action = Gtk.Button(
             label=_("View Account"),
@@ -149,13 +142,6 @@ class MainWindow(Adw.ApplicationWindow):
         folder_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
         folder_row.connect("activated", lambda _row: self.open_folder())
         account_list.append(folder_row)
-        self.last_row = _compact_action_row(
-            title=_("Last Successful Sync"),
-            subtitle=self._format_last_sync(),
-            icon_name="document-open-recent-symbolic",
-        )
-        account_list.append(self.last_row)
-
         quota_row = Gtk.ListBoxRow(activatable=False, selectable=False)
         quota_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         quota_box.set_margin_top(10)
@@ -210,28 +196,23 @@ class MainWindow(Adw.ApplicationWindow):
         self.buttons.append(self.pause_button)
         content.append(self.buttons)
 
-        self.activity_expander = Adw.ExpanderRow(
-            title=_("Recent Activity"),
-            subtitle=_("No activity in this session"),
-            icon_name="document-open-recent-symbolic",
-            expanded=False,
+        activity_heading = Gtk.Label(
+            label=_("Recent Activity"), xalign=0, css_classes=["heading"],
         )
-        if hasattr(self.activity_expander, "set_title_lines"):
-            self.activity_expander.set_title_lines(1)
-        if hasattr(self.activity_expander, "set_subtitle_lines"):
-            self.activity_expander.set_subtitle_lines(1)
-        activity_list = Gtk.ListBox(css_classes=["boxed-list"], selection_mode=Gtk.SelectionMode.NONE)
-        activity_list.append(self.activity_expander)
-        content.append(activity_list)
-
-        self.view_log_row = _compact_action_row(
-            title=_("View Synchronization Log"),
-            icon_name="text-x-generic-symbolic",
+        activity_heading.set_margin_start(4)
+        content.append(activity_heading)
+        self.activity_list = Gtk.ListBox(
+            css_classes=["boxed-list"], selection_mode=Gtk.SelectionMode.NONE,
+        )
+        self.view_history_row = _compact_action_row(
+            title=_("View Synchronization History"),
+            icon_name="document-open-recent-symbolic",
             activatable=True,
         )
-        self.view_log_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self.view_log_row.connect("activated", lambda _row: self.show_log())
-        self._refresh_activity()
+        self.view_history_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        self.view_history_row.connect("activated", lambda _row: self._show_history())
+        self.activity_list.append(self.view_history_row)
+        content.append(self.activity_list)
 
         if hasattr(Adw, "Breakpoint") and hasattr(self, "add_breakpoint"):
             condition = Adw.BreakpointCondition.parse("max-width: 520px")
@@ -242,7 +223,8 @@ class MainWindow(Adw.ApplicationWindow):
             self.add_breakpoint(breakpoint)
 
         self._state_unsubscribe = self.runtime.state.subscribe(self._state_changed)
-        self._log_unsubscribe = self.logger.subscribe(self._log_line)
+        self._history_unsubscribe = self.runtime.history.subscribe(self._refresh_activity)
+        self._refresh_activity()
         self.connect("close-request", self._hide_on_close)
         storage = cached_storage_usage(self.config)
         if storage:
@@ -285,9 +267,16 @@ class MainWindow(Adw.ApplicationWindow):
         icon, title = STATE_PRESENTATION[snapshot.state]
         self.status_icon.set_from_icon_name(icon)
         self.status_title.set_text(title)
-        description = _(snapshot.message) if snapshot.message else _("Your files are ready.")
-        self.status_description.set_text(description)
-        self.status_description.set_tooltip_text(description)
+        description = _(snapshot.message) if snapshot.message else ""
+        subtitle = self._format_last_sync()
+        if description and snapshot.state != AppState.SYNCING and description.casefold() != title.casefold():
+            subtitle = f"{subtitle} · {description}"
+        self.status_subtitle.set_text(subtitle)
+        self.status_subtitle.set_tooltip_text(subtitle)
+        if snapshot.state == AppState.IDLE_OK:
+            self.status_icon.add_css_class("success")
+        else:
+            self.status_icon.remove_css_class("success")
         paused = snapshot.state == AppState.PAUSED_USER
         self.pause_content.set_label(_("Resume Sync") if paused else _("Pause Sync"))
         self.pause_content.set_icon_name(
@@ -310,7 +299,10 @@ class MainWindow(Adw.ApplicationWindow):
                 else _("Sync Now")
             )
             self.sync_content.set_icon_name("emblem-synchronizing-symbolic")
-        self.last_row.set_subtitle(self._format_last_sync())
+        needs_review = snapshot.state == AppState.SAFETY_REVIEW
+        if self._safety_review_active != needs_review and self.history_window:
+            self.history_window.activity.refresh()
+        self._safety_review_active = needs_review
 
     def _format_last_sync(self) -> str:
         value = self.config.data["runtime"].get("last_successful_sync")
@@ -318,191 +310,31 @@ class MainWindow(Adw.ApplicationWindow):
             return _("Not yet synchronized")
         try:
             stamp = dt.datetime.fromisoformat(value).astimezone()
-            return stamp.strftime("%x %H:%M")
         except (ValueError, TypeError):
             return str(value)
-
-    def _log_line(self, line: str) -> None:
-        with self._activity_lock:
-            if self._disposed:
-                return
-            self._pending_activity_lines.append(line)
-            if self._activity_source:
-                return
-            self._activity_source = GLib.timeout_add(200, self._drain_activity)
-
-    def _drain_activity(self) -> bool:
-        with self._activity_lock:
-            lines = tuple(self._pending_activity_lines)
-            self._pending_activity_lines.clear()
-            self._activity_source = 0
-        if self._disposed:
-            return GLib.SOURCE_REMOVE
-        self._recent_entries.extend(parse_activity_line(line) for line in lines)
-        self._recent_entries = self._recent_entries[-5:]
-        self._expanded_activity_entries.intersection_update(
-            id(entry) for entry in self._recent_entries
-        )
-        self._refresh_activity()
-        return GLib.SOURCE_REMOVE
-
-    def _activity_row(self, entry: ActivityEntry) -> Gtk.ListBoxRow:
-        row = Gtk.ListBoxRow(activatable=True, selectable=False)
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        box.set_margin_top(7)
-        box.set_margin_bottom(7)
-        box.set_margin_start(12)
-        box.set_margin_end(12)
-        icon = Gtk.Image(icon_name=entry.icon_name, pixel_size=16)
-        icon.set_tooltip_text(self._activity_level_name(entry.level))
-        box.append(icon)
-        label = Gtk.Label(label=entry.message, xalign=0, hexpand=True)
-        label.set_use_markup(False)
-        label.set_wrap_mode(Pango.WrapMode.WORD_CHAR)
-        entry_key = id(entry)
-        self._set_activity_label_expanded(
-            label, entry_key in self._expanded_activity_entries
-        )
-        box.append(label)
-        row.set_child(box)
-
-        primary_click = Gtk.GestureClick.new()
-        primary_click.set_button(Gdk.BUTTON_PRIMARY)
-        primary_click.connect(
-            "released", self._activity_primary_clicked, label, entry_key
-        )
-        row.add_controller(primary_click)
-
-        secondary_click = Gtk.GestureClick.new()
-        secondary_click.set_button(Gdk.BUTTON_SECONDARY)
-        secondary_click.connect(
-            "pressed", self._activity_secondary_clicked, row, entry.message
-        )
-        row.add_controller(secondary_click)
-        return row
-
-    @staticmethod
-    def _activity_level_name(level: str) -> str:
-        return {
-            "DEBUG": _("Debug"),
-            "INFO": _("Information"),
-            "WARNING": _("Warning"),
-            "ERROR": _("Error"),
-            "CRITICAL": _("Critical"),
-        }.get(level, _("Information"))
-
-    @staticmethod
-    def _set_activity_label_expanded(label: Gtk.Label, expanded: bool) -> None:
-        label.set_single_line_mode(not expanded)
-        label.set_lines(-1 if expanded else 1)
-        label.set_ellipsize(
-            Pango.EllipsizeMode.NONE if expanded else Pango.EllipsizeMode.END
-        )
-        label.set_wrap(expanded)
-        label.set_tooltip_text(None if expanded else label.get_text())
-
-    def _activity_primary_clicked(
-        self,
-        gesture: Gtk.GestureClick,
-        press_count: int,
-        _x: float,
-        _y: float,
-        label: Gtk.Label,
-        entry_key: int,
-    ) -> None:
-        if press_count != 1:
-            return
-        expanded = entry_key not in self._expanded_activity_entries
-        if expanded:
-            self._expanded_activity_entries.add(entry_key)
-        else:
-            self._expanded_activity_entries.discard(entry_key)
-        self._set_activity_label_expanded(label, expanded)
-        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
-
-    def _activity_secondary_clicked(
-        self,
-        gesture: Gtk.GestureClick,
-        press_count: int,
-        x: float,
-        y: float,
-        row: Gtk.ListBoxRow,
-        message: str,
-    ) -> None:
-        if press_count != 1:
-            return
-        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
-
-        menu = Gio.Menu()
-        menu.append(_("Copy Message"), "activity.copy")
-        actions = Gio.SimpleActionGroup()
-        copy_action = Gio.SimpleAction.new("copy", None)
-        actions.add_action(copy_action)
-        row.insert_action_group("activity", actions)
-
-        popover = Gtk.PopoverMenu.new_from_model(menu)
-        popover.set_has_arrow(True)
-        popover.set_parent(row)
-        target = Gdk.Rectangle()
-        target.x = int(x)
-        target.y = int(y)
-        target.width = 1
-        target.height = 1
-        popover.set_pointing_to(target)
-        copy_action.connect(
-            "activate", self._copy_activity_message, message, popover
-        )
-        popover.connect("closed", self._activity_menu_closed, row)
-        popover.popup()
-
-    def _copy_activity_message(
-        self,
-        _action: Gio.SimpleAction,
-        _parameter: GLib.Variant | None,
-        message: str,
-        popover: Gtk.PopoverMenu,
-    ) -> None:
-        self.get_clipboard().set(message)
-        popover.popdown()
-        self.toast_overlay.add_toast(Adw.Toast(title=_("Message copied")))
-
-    @staticmethod
-    def _activity_menu_closed(
-        popover: Gtk.PopoverMenu, row: Gtk.ListBoxRow
-    ) -> None:
-        row.insert_action_group("activity", None)
-        popover.unparent()
-
-    def _empty_activity_row(self) -> Gtk.ListBoxRow:
-        return self._activity_row(
-            ActivityEntry(
-                level=_("Information"),
-                message=_("No activity in this session"),
-                icon_name="dialog-information-symbolic",
-            )
-        )
+        time_text = stamp.strftime("%H:%M" if stamp.date() == dt.date.today() else "%x %H:%M")
+        return _("Last successful sync · {time}").format(time=time_text)
 
     def _refresh_activity(self) -> None:
+        self.runtime.history.recent(3, self._show_recent_activity)
+
+    def _show_recent_activity(self, entries: list[SyncSummary]) -> None:
+        if self._disposed:
+            return
         for row in self._activity_rows:
-            self.activity_expander.remove(row)
-        self._activity_rows.clear()
-        entries = list(reversed(self._recent_entries))
+            self.activity_list.remove(row)
         if entries:
-            count = len(entries)
-            subtitle = (
-                _("1 event in this session")
-                if count == 1
-                else _("{count} events in this session").format(count=count)
-            )
-            self.activity_expander.set_subtitle(subtitle)
-            rows = [self._activity_row(entry) for entry in entries]
+            self._activity_rows = []
+            for entry in entries:
+                row = Adw.ActionRow(activatable=False)
+                summary_row(entry, row)
+                self._activity_rows.append(row)
         else:
-            self.activity_expander.set_subtitle(_("No activity in this session"))
-            rows = [self._empty_activity_row()]
-        rows.append(self.view_log_row)
-        for row in rows:
-            self.activity_expander.add_row(row)
-        self._activity_rows.extend(rows)
+            self._activity_rows = [
+                Adw.ActionRow(title=_("No synchronization activity yet"), activatable=False)
+            ]
+        for index, row in enumerate(self._activity_rows):
+            self.activity_list.insert(row, index)
 
     def _sync_clicked(self, _button: Gtk.Button) -> None:
         if self.runtime.state.snapshot.state == AppState.AUTH_REQUIRED:
@@ -542,13 +374,19 @@ class MainWindow(Adw.ApplicationWindow):
         root.mkdir(parents=True, exist_ok=True)
         Gio.AppInfo.launch_default_for_uri(root.as_uri(), None)
 
-    def show_log(self, _button: Gtk.Button | None = None) -> None:
+    def show_log(self) -> None:
+        self._show_history(technical=True)
+
+    def _show_history(self, *, technical: bool = False) -> None:
         if self._disposed:
             return
-        if not self.log_window:
-            self.log_window = LogWindow(self, self.logger)
-            self.log_window.connect("close-request", self._log_closed)
-        self.log_window.present()
+        if not self.history_window:
+            self.history_window = HistoryWindow(
+                self, self.runtime.history, self.logger, self.runtime.scheduler,
+            )
+            self.history_window.connect("close-request", self._history_closed)
+        self.history_window.select_page(technical=technical)
+        self.history_window.present()
 
     def show_settings(self, _button: Gtk.Button | None = None) -> None:
         if self._disposed:
@@ -557,8 +395,8 @@ class MainWindow(Adw.ApplicationWindow):
         if application:
             application.show_settings()
 
-    def _log_closed(self, _window: Gtk.Window) -> bool:
-        self.log_window = None
+    def _history_closed(self, _window: Gtk.Window) -> bool:
+        self.history_window = None
         if not self.get_visible() and not self._disposed:
             GLib.idle_add(self.close)
         return False
@@ -580,19 +418,14 @@ class MainWindow(Adw.ApplicationWindow):
         return False
 
     def _dispose_ui(self) -> None:
-        with self._activity_lock:
-            if self._disposed:
-                return
-            self._disposed = True
-            if self._activity_source:
-                GLib.source_remove(self._activity_source)
-                self._activity_source = 0
-            self._pending_activity_lines.clear()
+        if self._disposed:
+            return
+        self._disposed = True
         self._state_unsubscribe()
-        self._log_unsubscribe()
-        if self.log_window:
-            self.log_window.close()
-            self.log_window = None
+        self._history_unsubscribe()
+        if self.history_window:
+            self.history_window.close()
+            self.history_window = None
 
     def dispose_for_account_reset(self) -> None:
         self._dispose_ui()

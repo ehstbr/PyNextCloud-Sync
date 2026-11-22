@@ -7,6 +7,7 @@ from typing import Any, Callable
 
 from gi.repository import Gio, GLib
 
+from pynextcloud_sync.nextcloud.activity import ActivityCapture, ActivityReport
 from pynextcloud_sync.nextcloud.command import BoundedOutputCapture, CommandSpec
 
 
@@ -16,6 +17,8 @@ class SyncResult:
     duration: float
     output: str
     classification: str
+    activity: ActivityReport = ActivityReport()
+    interrupted: bool = False
 
     @property
     def successful(self) -> bool:
@@ -26,6 +29,7 @@ class SyncEngine:
     def __init__(self, logger: Any) -> None:
         self.logger = logger
         self.process: Gio.Subprocess | None = None
+        self._activity: ActivityCapture | None = None
 
     @property
     def running(self) -> bool:
@@ -49,8 +53,9 @@ class SyncEngine:
             return
 
         self.process = process
+        self._activity = ActivityCapture(self.logger.redactor.redact)
         worker = threading.Thread(
-            target=self._collect, args=(process, started, callback),
+            target=self._collect, args=(process, started, callback, self._activity),
             name="pynextcloud-sync-output", daemon=True,
         )
         try:
@@ -59,20 +64,25 @@ class SyncEngine:
             process.force_exit()
             process.wait(None)
             self.process = None
+            self._activity = None
             callback(SyncResult(1, time.monotonic() - started, str(exc), "sync_error"))
 
     def _collect(
         self, process: Gio.Subprocess, started: float,
         callback: Callable[[SyncResult], None],
+        activity: ActivityCapture | None = None,
     ) -> None:
         stream = process.get_stdout_pipe()
         capture = BoundedOutputCapture(max_lines=200)
+        activity = activity or ActivityCapture(self.logger.redactor.redact)
         pending = b""
+        fully_read = True
 
         def record(raw: bytes) -> None:
             line = raw.decode("utf-8", errors="replace").rstrip("\r")
             safe = self.logger.redactor.redact(line)
             capture.feed(safe)
+            activity.feed(line)
             self.logger.info("CMD %s", safe)
 
         try:
@@ -83,6 +93,7 @@ class SyncEngine:
             if pending:
                 record(pending)
         except GLib.Error as exc:
+            fully_read = False
             self.logger.warning("Could not read nextcloudcmd output: %s", exc)
         finally:
             try:
@@ -91,15 +102,19 @@ class SyncEngine:
                 self.logger.warning("Could not close nextcloudcmd output: %s", exc)
 
         exit_code = 1
+        interrupted = False
         try:
             process.wait(None)
             if process.get_if_exited():
                 exit_code = process.get_exit_status()
+            else:
+                interrupted = True
         except GLib.Error as exc:
             self.logger.warning("nextcloudcmd wait failed: %s", exc)
         result = SyncResult(
             exit_code, time.monotonic() - started,
             capture.output, capture.classification(exit_code),
+            activity.report(fully_read=fully_read, successful=exit_code == 0), interrupted,
         )
         GLib.idle_add(self._completed, callback, result)
 
@@ -107,8 +122,14 @@ class SyncEngine:
         self, callback: Callable[[SyncResult], None], result: SyncResult,
     ) -> bool:
         self.process = None
+        self._activity = None
         callback(result)
         return GLib.SOURCE_REMOVE
+
+    def interrupted_activity(self) -> ActivityReport:
+        if self._activity:
+            return self._activity.report(fully_read=False)
+        return ActivityReport()
 
     def cancel(self) -> None:
         if self.process is None:

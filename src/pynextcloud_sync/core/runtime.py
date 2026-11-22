@@ -19,6 +19,7 @@ from pynextcloud_sync.core.triggers import Trigger
 from pynextcloud_sync.nextcloud.details_refresher import RemoteDetailsRefresher
 from pynextcloud_sync.nextcloud.models import AccountDetails, ServerDetails
 from pynextcloud_sync.nextcloud.push import NotifyPushClient
+from pynextcloud_sync.storage.history import SyncHistory
 from pynextcloud_sync.util.i18n import _
 
 
@@ -51,6 +52,14 @@ class RuntimeController:
         )
         self.push_state = PushState.DISABLED
         self.push_message = ""
+        account = config.data.get("account")
+        self.history = (
+            SyncHistory(
+                logger, account, config.data["runtime"].get("last_successful_sync"),
+                GLib.idle_add, bootstrap_at=config.data["safety"].get("bootstrap_completed_at"),
+            )
+            if account else None
+        )
         self.engine = SyncEngine(logger)
         self.scheduler = SyncScheduler(
             config,
@@ -60,6 +69,7 @@ class RuntimeController:
             logger,
             self._sync_completed,
             notify_safety_alert,
+            history=self.history,
         )
         self.timers = SyncTimers(self.scheduler.request)
         self.network = NetworkWatcher(self._network_changed)
@@ -104,6 +114,8 @@ class RuntimeController:
         self.push.disconnect()
         self.details_refresher.stop()
         self.scheduler.stop()
+        if self.history:
+            self.history.close()
         if self.inotify:
             self.inotify.stop()
             self.inotify = None
@@ -125,6 +137,9 @@ class RuntimeController:
             return
         sync = self.config.data["sync"]
         account = self.config.data["account"]
+        logging_config = self.config.data["logging"]
+        if self.history:
+            self.history.configure(logging_config["save_logs"], logging_config["retention_days"])
         timer_signature = (
             bool(sync.get("local_interval_enabled", False)),
             int(sync.get("local_interval_minutes", 5)),

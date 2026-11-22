@@ -200,6 +200,9 @@ class AppLogger:
     def error(self, message: object, *args: object) -> None:
         self._log(logging.ERROR, message, *args)
 
+    def critical(self, message: object, *args: object) -> None:
+        self._log(logging.CRITICAL, message, *args)
+
     def _log_paths(self) -> list[Path]:
         return sorted(self.directory.glob(f"{self.prefix}-????-??-??.log"))
 

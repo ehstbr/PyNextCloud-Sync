@@ -1,3 +1,20 @@
+pynextcloud-sync (0.1.38) stable; urgency=medium
+
+  * Places Recent Activity below the account, local folder, and storage information.
+  * Clarifies successful runs without file transfers and runs with limited command output.
+  * Recognizes completed rounds from nextcloudcmd versions that omit the older completion line.
+  * Keeps the status card at the same height when synchronization starts and finishes.
+  * Shows deletion, move, rename, and folder creation counts in synchronization summaries.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Tue, 17 Nov 2026 19:59:16 +0000
+
+pynextcloud-sync (0.1.37) stable; urgency=medium
+
+  * Add expandable synchronization history and an updated recent activity view.
+  * Retain detailed logs and include safety baseline events in the originating run.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Tue, 17 Nov 2026 04:37:28 +0000
+
 pynextcloud-sync (0.1.36) stable; urgency=medium
 
   * Install private symbolic fallbacks in hicolor/scalable/apps.

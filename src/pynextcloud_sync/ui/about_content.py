@@ -18,7 +18,7 @@ def terms_text() -> str:
         "not responsible for lost, corrupted, deleted, or otherwise damaged data.\n\n"
         "The application delegates file reconciliation and conflict handling to "
         "nextcloudcmd. Availability of notify_push and other server features depends "
-        "on the Nextcloud installation. This release was tested with Nextcloud Hub 26 "
+        "on the Nextcloud installation. The project has been tested with Nextcloud Hub 26 "
         "Spring (34.0.1) on Nextcloud AIO. Compatibility with other or future "
         "Nextcloud versions is not guaranteed.\n\n"
         "No telemetry, advertising, or usage tracking is included. Credentials are "
@@ -30,6 +30,25 @@ def terms_text() -> str:
 
 def release_notes_markup() -> str:
     sections = [
+        (
+            _("Version 0.1.38"),
+            [
+                _("Places Recent Activity below the account, local folder, and storage information."),
+                _("Clarifies successful runs without file transfers and runs with limited command output."),
+                _("Recognizes completed rounds from nextcloudcmd versions that omit the older completion line."),
+                _("Keeps the status card at the same height when synchronization starts and finishes."),
+                _("Shows deletion, move, rename, and folder creation counts in synchronization summaries."),
+            ],
+        ),
+        (
+            _("Version 0.1.37"),
+            [
+                _("Shows the three most recent synchronization runs on the home screen."),
+                _("Adds an expandable activity history with confirmed uploads, downloads, and safety events."),
+                _("Shows when a synchronization completed without file changes."),
+                _("Keeps the detailed log available in its own tab with copy, auto-scroll, and access to daily log files."),
+            ],
+        ),
         (
             _("Version 0.1.36"),
             [

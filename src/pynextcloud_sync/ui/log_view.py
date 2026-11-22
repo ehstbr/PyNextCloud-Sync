@@ -7,28 +7,23 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Gdk, Gio, GLib, Gtk
 
 from pynextcloud_sync.util.i18n import _
 
 
-class LogWindow(Adw.Window):
+class LogView(Gtk.Box):
     MAX_BUFFER_LINES = 2_000
     TRIM_TO_LINES = 1_500
 
-    def __init__(self, parent: Gtk.Window, app_logger: object) -> None:
-        super().__init__(transient_for=parent, modal=False, title=_("Synchronization Log"))
-        self.set_default_size(820, 560)
+    def __init__(self, app_logger: object) -> None:
+        super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.logger = app_logger
         self.auto_scroll = True
         self._pending: deque[str] = deque(maxlen=500)
         self._pending_lock = Lock()
         self._flush_source = 0
         self._disposed = False
-
-        toolbar = Adw.ToolbarView()
-        header = Adw.HeaderBar()
-        toolbar.add_top_bar(header)
 
         self.buffer = Gtk.TextBuffer()
         if hasattr(self.buffer, "set_enable_undo"):
@@ -47,11 +42,14 @@ class LogWindow(Adw.Window):
         self.view = view
         scroller = Gtk.ScrolledWindow(vexpand=True, hexpand=True)
         scroller.set_child(view)
-        toolbar.set_content(scroller)
+        self._vertical = scroller.get_vadjustment()
+        self._vertical.connect("changed", self._scroll_if_following)
+        view.connect("map", self._scroll_if_following)
+        self.append(scroller)
 
         action_bar = Gtk.ActionBar()
         auto = Gtk.CheckButton(label=_("Auto-scroll"), active=True)
-        auto.connect("toggled", lambda row: setattr(self, "auto_scroll", row.get_active()))
+        auto.connect("toggled", self._toggle_auto_scroll)
         action_bar.pack_start(auto)
         copy_button = Gtk.Button(label=_("Copy"))
         copy_button.connect("clicked", self._copy)
@@ -59,11 +57,14 @@ class LogWindow(Adw.Window):
         folder_button = Gtk.Button(label=_("Open Log Folder"))
         folder_button.connect("clicked", self._open_folder)
         action_bar.pack_end(folder_button)
-        toolbar.add_bottom_bar(action_bar)
-        self.set_content(toolbar)
+        self.append(action_bar)
 
         self.unsubscribe = self.logger.subscribe(self._append)
-        self.connect("close-request", self._closed)
+
+    def _toggle_auto_scroll(self, button: Gtk.CheckButton) -> None:
+        self.auto_scroll = button.get_active()
+        if self.auto_scroll:
+            self._scroll_to_end()
 
     def _append(self, line: str) -> None:
         with self._pending_lock:
@@ -82,7 +83,7 @@ class LogWindow(Adw.Window):
         prefix = "\n" if self.buffer.get_char_count() else ""
         self.buffer.insert(end, prefix + "\n".join(lines))
         self._trim_buffer()
-        if self.auto_scroll:
+        if self.auto_scroll and self.view.get_mapped():
             self._scroll_to_end()
         return GLib.SOURCE_REMOVE
 
@@ -97,9 +98,11 @@ class LogWindow(Adw.Window):
         self.buffer.delete(start, end)
 
     def _scroll_to_end(self) -> None:
-        mark = self.buffer.create_mark(None, self.buffer.get_end_iter(), False)
-        self.view.scroll_mark_onscreen(mark)
-        self.buffer.delete_mark(mark)
+        self._vertical.set_value(self._vertical.get_upper() - self._vertical.get_page_size())
+
+    def _scroll_if_following(self, *_args: object) -> None:
+        if self.auto_scroll and self.view.get_mapped():
+            self._scroll_to_end()
 
     def _copy(self, _button: Gtk.Button) -> None:
         start, end = self.buffer.get_bounds()
@@ -111,7 +114,7 @@ class LogWindow(Adw.Window):
         self.logger.directory.mkdir(parents=True, exist_ok=True)
         Gio.AppInfo.launch_default_for_uri(self.logger.directory.as_uri(), None)
 
-    def _closed(self, _window: Gtk.Window) -> bool:
+    def dispose_log(self) -> None:
         with self._pending_lock:
             self._disposed = True
             self._pending.clear()
@@ -119,4 +122,3 @@ class LogWindow(Adw.Window):
                 GLib.source_remove(self._flush_source)
                 self._flush_source = 0
         self.unsubscribe()
-        return False
