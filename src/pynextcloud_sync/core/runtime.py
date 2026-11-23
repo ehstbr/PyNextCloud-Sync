@@ -105,7 +105,12 @@ class RuntimeController:
         if not self.scheduler.manual_only:
             self.scheduler.request(Trigger.STARTUP)
 
-    def stop(self) -> None:
+    @property
+    def busy(self) -> bool:
+        return self.scheduler.busy
+
+    def prepare_shutdown(self, *, cancel_sync: bool = False) -> None:
+        self.scheduler.prepare_shutdown(cancel_sync=cancel_sync)
         self._started = False
         self.timers.stop()
         self.network.stop()
@@ -113,9 +118,6 @@ class RuntimeController:
         self.suspend.stop()
         self.push.disconnect()
         self.details_refresher.stop()
-        self.scheduler.stop()
-        if self.history:
-            self.history.close()
         if self.inotify:
             self.inotify.stop()
             self.inotify = None
@@ -131,6 +133,12 @@ class RuntimeController:
         if self._unsubscribe:
             self._unsubscribe()
             self._unsubscribe = None
+
+    def stop(self) -> None:
+        self.prepare_shutdown()
+        self.scheduler.stop()
+        if self.history:
+            self.history.close()
 
     def reconfigure(self) -> None:
         if not self._started or not self.config.configured:
@@ -303,6 +311,8 @@ class RuntimeController:
             )
 
     def _sync_completed(self, result: SyncResult) -> None:
+        if not self._started:
+            return
         if result.successful:
             self._error_notified = False
             self.details_refresher.refresh_account(storage_only=True)

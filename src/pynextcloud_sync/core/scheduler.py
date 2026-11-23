@@ -65,6 +65,8 @@ class SyncScheduler:
         self._run_marker_active = False
         self._keyring_locked = False
         self._authentication_required = False
+        self._shutting_down = False
+        self._baseline_recording = False
         self._stopped = False
         self._feedback_followup_pending = False
         self._inotify_during_sync = False
@@ -85,6 +87,10 @@ class SyncScheduler:
     def authentication_required(self) -> bool:
         return self._authentication_required
 
+    @property
+    def busy(self) -> bool:
+        return self.engine.running or self._baseline_recording
+
     def authentication_restored(self) -> None:
         self._authentication_required = False
         self._keyring_locked = False
@@ -98,7 +104,7 @@ class SyncScheduler:
         )
 
     def request(self, trigger: Trigger) -> None:
-        if self._stopped:
+        if self._stopped or self._shutting_down:
             return
         if self.safety_alert and not self._safety_bypass_once:
             self.queue.add(trigger)
@@ -169,6 +175,7 @@ class SyncScheduler:
     def _schedule_start(self) -> None:
         if (
             self._stopped
+            or self._shutting_down
             or self._debounce_source
             or self._start_source
             or self._cooldown_source
@@ -182,7 +189,7 @@ class SyncScheduler:
 
     def _start(self) -> bool:
         self._start_source = 0
-        if self._stopped or self._preparing or self.engine.running or not self.queue or not self.online:
+        if self._stopped or self._shutting_down or self._preparing or self.engine.running or not self.queue or not self.online:
             return GLib.SOURCE_REMOVE
         reasons = self.queue.take()
         if self.paused and Trigger.MANUAL not in reasons:
@@ -234,7 +241,7 @@ class SyncScheduler:
         reasons: set[Trigger],
         attempt: SyncAttempt | None = None,
     ) -> bool:
-        if self._stopped:
+        if self._stopped or self._shutting_down:
             return GLib.SOURCE_REMOVE
         self._safety_checking = False
         self._preparing = False
@@ -264,11 +271,11 @@ class SyncScheduler:
         account: dict[str, Any],
         reasons: set[Trigger],
     ) -> None:
-        self.state.set(AppState.SYNCING, _("Synchronizing files…"))
+        self.state.set(AppState.SYNC_QUEUED, _("Reading the account credential…"))
         self._preparing = True
 
         def secret_ready(password: str | None, error: Exception | None) -> None:
-            if self._stopped:
+            if self._stopped or self._shutting_down:
                 return
             self._preparing = False
             if error:
@@ -330,6 +337,7 @@ class SyncScheduler:
             feedback_followup = self._feedback_followup_pending
             self._feedback_followup_pending = False
             self._active_attempt = attempt
+            self.state.set(AppState.SYNCING, _("Synchronizing files…"))
             self.engine.run(
                 spec,
                 lambda result: self._finished(result, reasons, feedback_followup),
@@ -361,6 +369,7 @@ class SyncScheduler:
                 self._set_idle_state()
             self.logger.info("Synchronization completed successfully.")
             self._preparing = True
+            self._baseline_recording = True
 
             def record_baseline() -> None:
                 recorded = False
@@ -379,6 +388,9 @@ class SyncScheduler:
                 name="pynextcloud-safety-record",
                 daemon=True,
             ).start()
+        elif result.interrupted:
+            self.state.set(AppState.ERROR, _("Synchronization interrupted"))
+            self.logger.info("Synchronization interrupted; the last committed safety baseline was retained.")
         elif result.classification == "authentication":
             self.authentication_rejected()
             self.logger.error("Synchronization failed because authentication was rejected.")
@@ -392,6 +404,9 @@ class SyncScheduler:
         if self.on_completed:
             self.on_completed(result)
 
+        if self._shutting_down:
+            self._inotify_during_sync = False
+            return
         queued = bool(self.queue)
         if self._inotify_during_sync:
             if feedback_followup:
@@ -424,6 +439,7 @@ class SyncScheduler:
         )
 
     def _baseline_recorded(self, recorded: bool) -> bool:
+        self._baseline_recording = False
         self._preparing = False
         if self._run_marker_active:
             if recorded:
@@ -440,6 +456,7 @@ class SyncScheduler:
                 )
         if (
             not self._stopped
+            and not self._shutting_down
             and not self._cooldown_source
             and self.queue
             and self.online
@@ -450,7 +467,7 @@ class SyncScheduler:
 
     def _cooldown_finished(self, run_pending: bool) -> bool:
         self._cooldown_source = 0
-        if self._stopped:
+        if self._stopped or self._shutting_down:
             return GLib.SOURCE_REMOVE
         if (
             run_pending
@@ -538,8 +555,8 @@ class SyncScheduler:
         self._safety_bypass_once = True
         self.request(Trigger.MANUAL)
 
-    def stop(self) -> None:
-        self._stopped = True
+    def prepare_shutdown(self, *, cancel_sync: bool = False) -> None:
+        self._shutting_down = True
         for attribute in ("_debounce_source", "_start_source", "_cooldown_source"):
             source = getattr(self, attribute)
             if source:
@@ -549,6 +566,16 @@ class SyncScheduler:
         self.local_dirty = False
         self.remote_pending = False
         self._feedback_followup_pending = False
+        self._inotify_during_sync = False
+        if not self.busy:
+            self._preparing = False
+            self._set_idle_state()
+        if cancel_sync and self.engine.running:
+            self.engine.cancel()
+
+    def stop(self) -> None:
+        self.prepare_shutdown()
+        self._stopped = True
         self.safety_alert = None
         self.safety_history_id = None
         if self.engine.running:

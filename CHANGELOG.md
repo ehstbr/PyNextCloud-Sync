@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.1.43 — 2026-11-22
+
+- Divides the synchronization bar into the operations reported so far.
+- Uses a continuous bar when the operations no longer fit as individual segments.
+
+## 0.1.42 — 2026-11-22
+
+- Shows one progress bar for reported file operations.
+- Displays analysis and finalization as status text and hides the bar on runs without reported changes.
+
+## 0.1.41 — 2026-11-22
+
+- Marks each confirmed file operation in the synchronization progress bar.
+- Keeps completed operations visible between sequential transfers.
+
+## 0.1.40 — 2026-11-22
+
+- Shows live synchronization progress in the status card through checking, applying changes, and finalization.
+- Counts reported uploads, downloads, and local and remote deletions together.
+- Adds a Close Application button to the optional update notice.
+- Stops the active synchronization when quitting with the update notice open.
+- Shows when the application is closing.
+
+## 0.1.39 — 2026-11-22
+
+- Stops scheduling new synchronization runs after an exit request.
+- Waits for the active process and safety baseline before closing.
+- Lets the package installer stop an active sync before upgrading.
+- Releases synchronization state when a finished command leaves its output pipe open.
+- Retains the last committed safety baseline when synchronization is interrupted.
+
 ## 0.1.38 — 2026-11-17
 
 - Places Recent Activity below the account, local folder, and storage information.

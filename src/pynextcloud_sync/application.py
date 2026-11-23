@@ -47,6 +47,8 @@ class PyNextCloudApplication(Adw.Application):
         self._pending_activation_show_main = False
         self._manual_update_in_progress = False
         self._mandatory_update_manifest: UpdateManifest | None = None
+        self._quit_requested = False
+        self._shutdown_source = 0
         self.config = ConfigStore()
         self.logger = AppLogger()
         self.credentials = CredentialStore(logger=self.logger)
@@ -102,12 +104,15 @@ class PyNextCloudApplication(Adw.Application):
                 lambda *_args: self.check_for_updates(self.get_active_window()),
             ),
             ("quit", lambda *_args: self.request_quit()),
+            ("quit-for-update", lambda *_args: self.request_quit(cancel_sync=True)),
         ):
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", callback)
             self.add_action(action)
 
     def do_activate(self) -> None:
+        if self._quit_requested:
+            return
         first_activation = self._activation_count == 0
         self._activation_count += 1
         show_main = not (first_activation and self.background)
@@ -150,6 +155,8 @@ class PyNextCloudApplication(Adw.Application):
         self._startup_update_complete = True
         show_main = self._pending_activation_show_main
         self._pending_activation_show_main = False
+        if self._quit_requested:
+            return
         if result.error:
             self.logger.warning("Automatic update check failed: %s", result.error)
             self._continue_activation(show_main=show_main)
@@ -185,6 +192,8 @@ class PyNextCloudApplication(Adw.Application):
             self.present_main()
 
     def check_for_updates(self, parent: Gtk.Window | None = None) -> None:
+        if self._quit_requested:
+            return
         if self._mandatory_update_manifest:
             self._show_update_window(self._mandatory_update_manifest)
             return
@@ -200,6 +209,8 @@ class PyNextCloudApplication(Adw.Application):
         def finished(result: UpdateCheckResult) -> None:
             self._manual_update_in_progress = False
             progress.close()
+            if self._quit_requested:
+                return
             if result.error:
                 self.logger.warning("Manual update check failed: %s", result.error)
                 self._show_status_dialog(
@@ -249,6 +260,8 @@ class PyNextCloudApplication(Adw.Application):
         *,
         parent: Gtk.Window | None = None,
     ) -> None:
+        if self._quit_requested:
+            return
         if parent is None:
             parent = self._update_window_parent(require_mapped=True)
         elif not parent.get_mapped():
@@ -270,7 +283,7 @@ class PyNextCloudApplication(Adw.Application):
             manifest,
             parent=parent,
             on_close=self._update_window_closed,
-            on_quit=self.quit,
+            on_quit=lambda: self.request_quit(cancel_sync=True),
         )
         self.update_window.present()
         GLib.idle_add(self._present_update_window_foreground, self.update_window)
@@ -322,8 +335,7 @@ class PyNextCloudApplication(Adw.Application):
             self.tray.stop()
             self.tray = None
         if self.runtime:
-            self.runtime.stop()
-            self.runtime = None
+            self.runtime.prepare_shutdown(cancel_sync=True)
         if self.settings_window:
             self.settings_window.close()
             self.settings_window = None
@@ -333,6 +345,7 @@ class PyNextCloudApplication(Adw.Application):
             old_window.dispose_for_account_reset()
             old_window.close()
         self._show_update_window(manifest)
+        self._wait_for_shutdown()
 
     def _setup_complete(self) -> None:
         if self.setup_window:
@@ -401,7 +414,7 @@ class PyNextCloudApplication(Adw.Application):
         self.reconnect_account()
 
     def _ensure_runtime(self) -> None:
-        if self._mandatory_update_manifest or self.runtime or not self.config.data.get("safety", {}).get(
+        if self._quit_requested or self._mandatory_update_manifest or self.runtime or not self.config.data.get("safety", {}).get(
             "bootstrap_complete", False
         ):
             return
@@ -451,6 +464,8 @@ class PyNextCloudApplication(Adw.Application):
         self.tray.start()
 
     def _tray_sync(self) -> None:
+        if self._quit_requested:
+            return
         if self.runtime and self.runtime.scheduler.safety_alert:
             self.present_main()
             self.review_safety_alert(self.main_window)
@@ -728,18 +743,34 @@ class PyNextCloudApplication(Adw.Application):
         self.config.save()
         self._ensure_bootstrap(recovery=True, initialize_integrations=False)
 
-    def request_quit(self) -> None:
+    def request_quit(self, *, cancel_sync: bool = False) -> None:
+        already_requested = self._quit_requested
+        self._quit_requested = True
+        update_window = self.update_window
+        if update_window and update_window.get_visible():
+            update_window.show_closing()
+            cancel_sync = True
+        self._update_window_presenter.clear()
+        self._safety_dialog_presenter.clear()
+        self.update_checker.cancel()
         if self.bootstrap_window and self.bootstrap_window.request_exit():
             return
-        if self.runtime and self.runtime.engine.running:
+        if self.runtime:
+            self.runtime.prepare_shutdown(cancel_sync=cancel_sync)
+        if self.runtime and self.runtime.busy and not already_requested and not cancel_sync:
             notification = Gio.Notification.new(_("Finishing synchronization"))
             notification.set_body(
                 _("PyNextCloud Sync will quit when the current synchronization finishes.")
             )
+            notification.add_button(_("Stop Sync and Quit"), "app.quit-for-update")
             self.send_notification("quit-pending", notification)
-            GLib.timeout_add_seconds(1, self._quit_when_ready)
+        self._wait_for_shutdown()
+
+    def _wait_for_shutdown(self) -> None:
+        if self._shutdown_source:
             return
-        self.quit()
+        if self._quit_when_ready() == GLib.SOURCE_CONTINUE:
+            self._shutdown_source = GLib.timeout_add(100, self._quit_when_ready)
 
     def remove_account(self) -> None:
         account = self.config.data.get("account")
@@ -800,12 +831,21 @@ class PyNextCloudApplication(Adw.Application):
         )
 
     def _quit_when_ready(self) -> bool:
-        if self.runtime and self.runtime.engine.running:
+        if self.runtime and self.runtime.busy:
             return GLib.SOURCE_CONTINUE
-        self.quit()
+        self._shutdown_source = 0
+        if self.runtime:
+            self.runtime.stop()
+            self.runtime = None
+        if self._quit_requested:
+            self.withdraw_notification("quit-pending")
+            self.quit()
         return GLib.SOURCE_REMOVE
 
     def do_shutdown(self) -> None:
+        if self._shutdown_source:
+            GLib.source_remove(self._shutdown_source)
+            self._shutdown_source = 0
         self._update_window_presenter.clear()
         self._safety_dialog_presenter.clear()
         self.update_checker.cancel()

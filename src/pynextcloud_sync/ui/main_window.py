@@ -11,10 +11,11 @@ from gi.repository import Adw, Gio, GLib, Gtk, Pango
 
 from pynextcloud_sync import APP_NAME
 from pynextcloud_sync.core.state import AppState, StateSnapshot
+from pynextcloud_sync.nextcloud.activity import SyncPhase, SyncProgress
 from pynextcloud_sync.nextcloud.api import AccountDetails
 from pynextcloud_sync.storage.history import SyncSummary
 from pynextcloud_sync.storage.remote_details import cached_storage_usage
-from pynextcloud_sync.util.i18n import _
+from pynextcloud_sync.util.i18n import _, ngettext
 
 from .about import show_about_dialog
 from .activity import summary_row
@@ -36,6 +37,12 @@ STATE_PRESENTATION = {
     AppState.SAFETY_REVIEW: ("security-high-symbolic", _("Safety Review Required")),
 }
 
+SYNC_PHASE_DESCRIPTIONS = {
+    SyncPhase.CHECKING: _("Checking for changes…"),
+    SyncPhase.APPLYING: _("Applying changes…"),
+    SyncPhase.FINALIZING: _("Finalizing…"),
+}
+
 
 def _compact_action_row(**properties: object) -> Adw.ActionRow:
     row = Adw.ActionRow(**properties)
@@ -44,6 +51,38 @@ def _compact_action_row(**properties: object) -> Adw.ActionRow:
     if hasattr(row, "set_subtitle_lines"):
         row.set_subtitle_lines(1)
     return row
+
+
+class _OperationMarks(Gtk.Box):
+    """Display one segment per reported operation when the segments fit."""
+
+    MIN_MARK_WIDTH = 5
+
+    def __init__(self, description: str) -> None:
+        super().__init__(homogeneous=True, spacing=3)
+        self.set_tooltip_text(description)
+        self.update_property([Gtk.AccessibleProperty.LABEL], [description])
+        self._marks: list[Gtk.Box] = []
+        self._counts = (0, 0)
+
+    def fits(self, count: int, width: int) -> bool:
+        return count * self.MIN_MARK_WIDTH + (count - 1) * self.get_spacing() <= width
+
+    def show_counts(self, completed: int, active: int) -> None:
+        if self._counts == (completed, active):
+            return
+        self._counts = (completed, active)
+        total = completed + active
+        while len(self._marks) < total:
+            mark = Gtk.Box()
+            self.append(mark)
+            self._marks.append(mark)
+        while len(self._marks) > total:
+            self.remove(self._marks.pop())
+
+        for index, mark in enumerate(self._marks):
+            state = "confirmed" if index < completed else "running"
+            mark.set_css_classes(["sync-operation-mark", state])
 
 
 class MainWindow(Adw.ApplicationWindow):
@@ -57,6 +96,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._activity_rows: list[Gtk.ListBoxRow] = []
         self._safety_review_active = False
         self._disposed = False
+        self._progress_source = 0
 
         toolbar = Adw.ToolbarView()
         header = Adw.HeaderBar()
@@ -111,6 +151,29 @@ class MainWindow(Adw.ApplicationWindow):
         self.status_subtitle.set_single_line_mode(True)
         status_text.append(self.status_title)
         status_text.append(self.status_subtitle)
+        self._progress_style = Gtk.CssProvider()
+        self._progress_style.load_from_data(b"""
+            progressbar.sync-status-progress > trough,
+            progressbar.sync-status-progress > trough > progress { min-width: 0; min-height: 4px; }
+            progressbar.sync-status-progress > trough { background-color: alpha(@accent_bg_color, 0.38); }
+            .sync-operation-mark { min-height: 4px; border-radius: 2px; }
+            .sync-operation-mark.running { background-color: alpha(@accent_bg_color, 0.38); }
+            .sync-operation-mark.confirmed { background-color: @accent_bg_color; }
+        """)
+        Gtk.StyleContext.add_provider_for_display(
+            self.get_display(), self._progress_style, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+        description = _("Reported operations")
+        self._operation_summary = Gtk.ProgressBar(css_classes=["sync-status-progress"])
+        self._operation_summary.set_tooltip_text(description)
+        self._operation_summary.update_property([Gtk.AccessibleProperty.LABEL], [description])
+        self._operation_marks = _OperationMarks(description)
+        # Reserve the progress track's height so the other rows stay in place.
+        self._progress_stack = Gtk.Stack(hhomogeneous=False)
+        self._progress_stack.add_named(Gtk.Box(), "idle")
+        self._progress_stack.add_named(self._operation_summary, "summary")
+        self._progress_stack.add_named(self._operation_marks, "reported")
+        status_text.append(self._progress_stack)
         status_box.append(status_text)
         self.status_action = Gtk.Button(
             label=_("View Account"),
@@ -226,6 +289,8 @@ class MainWindow(Adw.ApplicationWindow):
         self._history_unsubscribe = self.runtime.history.subscribe(self._refresh_activity)
         self._refresh_activity()
         self.connect("close-request", self._hide_on_close)
+        self.connect("map", self._track_sync_progress)
+        self.connect("unmap", self._stop_progress_updates)
         storage = cached_storage_usage(self.config)
         if storage:
             self.set_storage_usage(storage.used, storage.total)
@@ -267,12 +332,7 @@ class MainWindow(Adw.ApplicationWindow):
         icon, title = STATE_PRESENTATION[snapshot.state]
         self.status_icon.set_from_icon_name(icon)
         self.status_title.set_text(title)
-        description = _(snapshot.message) if snapshot.message else ""
-        subtitle = self._format_last_sync()
-        if description and snapshot.state != AppState.SYNCING and description.casefold() != title.casefold():
-            subtitle = f"{subtitle} · {description}"
-        self.status_subtitle.set_text(subtitle)
-        self.status_subtitle.set_tooltip_text(subtitle)
+        self._track_sync_progress()
         if snapshot.state == AppState.IDLE_OK:
             self.status_icon.add_css_class("success")
         else:
@@ -303,6 +363,65 @@ class MainWindow(Adw.ApplicationWindow):
         if self._safety_review_active != needs_review and self.history_window:
             self.history_window.activity.refresh()
         self._safety_review_active = needs_review
+
+    def _track_sync_progress(self, _window: Gtk.Widget | None = None) -> None:
+        self._stop_progress_updates()
+        if self._update_sync_progress() and self.get_mapped():
+            self._progress_source = GLib.timeout_add(160, self._update_sync_progress)
+
+    def _stop_progress_updates(self, _window: Gtk.Widget | None = None) -> None:
+        if self._progress_source:
+            GLib.source_remove(self._progress_source)
+            self._progress_source = 0
+
+    def _update_sync_progress(self) -> bool:
+        snapshot = self.runtime.state.snapshot
+        progress = self.runtime.engine.progress
+        if progress is None and snapshot.state == AppState.SYNCING:
+            progress = SyncProgress()
+        if progress is None:
+            self._progress_source = 0
+            self._progress_stack.set_visible_child_name("idle")
+            description = _(snapshot.message) if snapshot.message else ""
+            subtitle = self._format_last_sync()
+            if description and description.casefold() != self.status_title.get_text().casefold():
+                subtitle = f"{subtitle} · {description}"
+            self._set_status_subtitle(subtitle)
+            return GLib.SOURCE_REMOVE
+
+        progress_view = "idle"
+        subtitle = SYNC_PHASE_DESCRIPTIONS[progress.phase]
+        if progress.phase == SyncPhase.CHECKING and not self.config.data["sync"].get("detailed_output", True):
+            subtitle = self._format_last_sync()
+        elif progress.phase == SyncPhase.APPLYING:
+            total = progress.completed + progress.active
+            if total:
+                if self._operation_marks.fits(total, self._progress_stack.get_width()):
+                    progress_view = "reported"
+                    self._operation_marks.show_counts(progress.completed, progress.active)
+                else:
+                    progress_view = "summary"
+                    self._operation_summary.set_fraction(progress.completed / total)
+            if progress.completed:
+                subtitle = ngettext(
+                    "{count} operation completed", "{count} operations completed", progress.completed,
+                ).format(count=progress.completed)
+                if progress.active:
+                    subtitle = _("{completed} · {active} in progress").format(
+                        completed=subtitle, active=progress.active,
+                    )
+            elif progress.active:
+                subtitle = ngettext(
+                    "{count} operation in progress", "{count} operations in progress", progress.active,
+                ).format(count=progress.active)
+        self._progress_stack.set_visible_child_name(progress_view)
+        self._set_status_subtitle(subtitle)
+        return GLib.SOURCE_CONTINUE
+
+    def _set_status_subtitle(self, subtitle: str) -> None:
+        if self.status_subtitle.get_text() != subtitle:
+            self.status_subtitle.set_text(subtitle)
+            self.status_subtitle.set_tooltip_text(subtitle)
 
     def _format_last_sync(self) -> str:
         value = self.config.data["runtime"].get("last_successful_sync")
@@ -421,6 +540,8 @@ class MainWindow(Adw.ApplicationWindow):
         if self._disposed:
             return
         self._disposed = True
+        self._stop_progress_updates()
+        Gtk.StyleContext.remove_provider_for_display(self.get_display(), self._progress_style)
         self._state_unsubscribe()
         self._history_unsubscribe()
         if self.history_window:

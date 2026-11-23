@@ -31,6 +31,42 @@ def terms_text() -> str:
 def release_notes_markup() -> str:
     sections = [
         (
+            _("Version 0.1.43"),
+            [
+                _("Sizes the synchronization bar to the reported file operations."),
+            ],
+        ),
+        (
+            _("Version 0.1.42"),
+            [
+                _("Shows one progress bar for reported file operations."),
+            ],
+        ),
+        (
+            _("Version 0.1.41"),
+            [
+                _("Marks each confirmed file operation in the synchronization progress bar."),
+            ],
+        ),
+        (
+            _("Version 0.1.40"),
+            [
+                _("Adds a Close Application button to the optional update notice."),
+                _("Stops the active synchronization when quitting with the update notice open."),
+                _("Shows when the application is closing."),
+            ],
+        ),
+        (
+            _("Version 0.1.39"),
+            [
+                _("Stops scheduling new synchronization runs after an exit request."),
+                _("Waits for the active process and safety baseline before closing."),
+                _("Lets the package installer stop an active sync before upgrading."),
+                _("Releases synchronization state when a finished command leaves its output pipe open."),
+                _("Retains the last committed safety baseline when synchronization is interrupted."),
+            ],
+        ),
+        (
             _("Version 0.1.38"),
             [
                 _("Places Recent Activity below the account, local folder, and storage information."),

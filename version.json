@@ -1,14 +1,11 @@
 {
   "schema_version": 1,
-  "version": "0.1.38",
+  "version": "0.1.43",
   "mandatory": false,
-  "released_at": "2026-11-17T19:59:16Z",
-  "summary": "Places Recent Activity below account information and clarifies status and file changes.",
+  "released_at": "2026-11-23T01:51:07Z",
+  "summary": "Matches synchronization bar segments to reported file operations.",
   "changelog": [
-    "Places Recent Activity below the account, local folder, and storage information.",
-    "Clarifies successful runs without file transfers and runs with limited command output.",
-    "Recognizes completed rounds from nextcloudcmd versions that omit the older completion line.",
-    "Keeps the status card at the same height when synchronization starts and finishes.",
-    "Shows deletion, move, rename, and folder creation counts in synchronization summaries."
+    "Divides the synchronization bar into the operations reported so far.",
+    "Uses a continuous bar when the operations no longer fit as individual segments."
   ]
 }

@@ -98,25 +98,28 @@ class UpdateWindow(Adw.ApplicationWindow):
         explanation.add_css_class("dim-label")
         hero.append(explanation)
 
-        actions = Gtk.Box(
-            orientation=Gtk.Orientation.HORIZONTAL,
-            spacing=10,
+        actions = Gtk.FlowBox(
+            selection_mode=Gtk.SelectionMode.NONE,
+            max_children_per_line=3,
+            column_spacing=10,
+            row_spacing=8,
             halign=Gtk.Align.CENTER,
         )
         releases = Gtk.Button(label=_("Download New Version"))
         releases.add_css_class("suggested-action")
         releases.connect("clicked", self._open_releases)
-        actions.append(releases)
+        actions.insert(releases, -1)
 
-        if mandatory:
-            quit_button = Gtk.Button(label=_("Close Application"))
-            quit_button.add_css_class("destructive-action")
-            quit_button.connect("clicked", lambda *_args: self._on_quit())
-            actions.append(quit_button)
-        else:
+        if not mandatory:
             not_now = Gtk.Button(label=_("Not Now"))
             not_now.connect("clicked", lambda *_args: self.close())
-            actions.append(not_now)
+            actions.insert(not_now, -1)
+
+        self.quit_button = Gtk.Button(label=_("Close Application"))
+        if mandatory:
+            self.quit_button.add_css_class("destructive-action")
+        self.quit_button.connect("clicked", lambda *_args: self._on_quit())
+        actions.insert(self.quit_button, -1)
         hero.append(actions)
 
         page.append(Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL))
@@ -185,6 +188,10 @@ class UpdateWindow(Adw.ApplicationWindow):
 
     def _open_releases(self, _button: Gtk.Button) -> None:
         Gio.AppInfo.launch_default_for_uri(RELEASES_URL, None)
+
+    def show_closing(self) -> None:
+        self.quit_button.set_label(_("Closing…"))
+        self.quit_button.set_sensitive(False)
 
     def _close_requested(self, _window: Gtk.Window) -> bool:
         if self.mandatory:
