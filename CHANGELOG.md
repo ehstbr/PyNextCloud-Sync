@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.45 — 2026-11-23
+
+- Recommends GNOME Keyring or KWallet for the desktop Secret Service.
+- Makes the GNOME AppIndicator extension an optional package suggestion.
+
+## 0.1.44 — 2026-11-23
+
+- Bundles Adwaita and Libadwaita symbolic icons for the application interface and tray menu.
+- Keeps the tray status icons visible on light and dark panels, including Xfce and KDE Plasma.
+
 ## 0.1.43 — 2026-11-22
 
 - Divides the synchronization bar into the operations reported so far.

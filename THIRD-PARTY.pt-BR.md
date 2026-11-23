@@ -6,6 +6,10 @@ O ZIP do código-fonte **não** incorpora o código nem os binários dessas depe
 
 Os identificadores abaixo resumem a principal licença informada pelo projeto original. Consulte o projeto vinculado e os arquivos de copyright fornecidos pela sua distribuição Linux para conhecer os termos completos da versão instalada.
 
+## Ícones incluídos na interface
+
+Os SVGs simbólicos do tema Adwaita, do projeto GNOME, são distribuídos aqui sob a LGPL-3.0. O ícone de link externo vem da Libadwaita, sob a LGPL-2.1 ou posterior. Os arquivos usam nomes próprios do PyNextCloud Sync. Em 23 de novembro de 2026, a EduhCommerce adaptou os SVGs do menu da bandeja para usar a cor do texto do KDE. Os créditos e os textos das licenças acompanham os ícones. [Tema Adwaita](https://gitlab.gnome.org/GNOME/adwaita-icon-theme) · [Libadwaita](https://gitlab.gnome.org/GNOME/libadwaita) · [Ícones incluídos](src/pynextcloud_sync/icons)
+
 ## Componentes principais de execução
 
 | Projeto | Como o PyNextCloud Sync utiliza | Licença do projeto original |

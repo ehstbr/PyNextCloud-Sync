@@ -1,6 +1,6 @@
 project(
   'pynextcloud-sync',
-  version: '0.1.43',
+  version: '0.1.45',
   meson_version: '>= 1.0.0',
 )
 
@@ -198,15 +198,8 @@ install_data(
   install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable', 'places'),
 )
 install_subdir(
-  'data/icons/status',
-  install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'symbolic', 'status'),
-  strip_directory: true,
-)
-
-install_subdir(
-  'data/icons/fallback',
-  install_dir: join_paths(get_option('datadir'), 'pynextcloud-sync', 'icons'),
-  strip_directory: true,
+  'src/pynextcloud_sync/icons',
+  install_dir: python.get_install_dir(pure: true, subdir: 'pynextcloud_sync'),
 )
 
 install_data(

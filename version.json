@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
-  "version": "0.1.43",
+  "version": "0.1.45",
   "mandatory": false,
-  "released_at": "2026-11-23T01:51:07Z",
-  "summary": "Matches synchronization bar segments to reported file operations.",
+  "released_at": "2026-11-23T17:28:48Z",
+  "summary": "Debian packaging supports either GNOME Keyring or KWallet for credential storage.",
   "changelog": [
-    "Divides the synchronization bar into the operations reported so far.",
-    "Uses a continuous bar when the operations no longer fit as individual segments."
+    "Recommends GNOME Keyring or KWallet for the desktop Secret Service.",
+    "Makes the GNOME AppIndicator extension an optional package suggestion."
   ]
 }

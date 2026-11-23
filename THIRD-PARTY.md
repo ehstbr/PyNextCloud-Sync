@@ -6,6 +6,10 @@ The source ZIP does **not** bundle the source code or binaries of these runtime 
 
 License identifiers below summarize the principal upstream license. Consult the linked project and the copyright files shipped by your Linux distribution for the complete, version-specific terms.
 
+## Bundled interface icons
+
+The symbolic SVGs from the GNOME Project's Adwaita icon theme are distributed here under LGPL-3.0. The external-link symbol comes from Libadwaita under LGPL-2.1-or-later. The icons use PyNextCloud Sync filenames. EduhCommerce adapted the tray menu SVGs to use KDE's text color on 2026-11-23. Attribution and license texts are included with the icons. [Adwaita icon theme](https://gitlab.gnome.org/GNOME/adwaita-icon-theme) · [Libadwaita](https://gitlab.gnome.org/GNOME/libadwaita) · [Bundled icons](src/pynextcloud_sync/icons)
+
 ## Core runtime
 
 | Project | How PyNextCloud Sync uses it | Upstream license |
