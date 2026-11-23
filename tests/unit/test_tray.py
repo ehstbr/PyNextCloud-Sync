@@ -3,7 +3,6 @@ from __future__ import annotations
 import ast
 import importlib.util
 import sys
-import tempfile
 import types
 import unittest
 import xml.etree.ElementTree as ET
@@ -12,6 +11,7 @@ from unittest.mock import patch
 
 from pynextcloud_sync.core.state import AppState, StateController
 from pynextcloud_sync.ui.tray_state import presentation_for
+from pynextcloud_sync.util.paths import bundled_icon_theme_path
 
 
 TRAY_SOURCE = (
@@ -158,7 +158,7 @@ class TrayContractTests(unittest.TestCase):
         self.assertEqual([entry[:2] for entry in pixmaps.value], [(16, 16), (22, 22), (32, 32)])
         self.assertEqual(len(pixmaps.value[0][2]), 16 * 16 * 4)
         self.assertIs(pixmaps, property_value("AttentionIconPixmap"))
-        self.assertTrue(property_value("IconName").value.endswith("-syncing-symbolic.svg"))
+        self.assertTrue(property_value("IconName").value.endswith("-syncing-contrast.svg"))
         self.assertIs(property_value("ToolTip").value[1], pixmaps.value)
 
         state.set(AppState.SYNC_QUEUED, "Checking the safety baseline…")
@@ -176,18 +176,34 @@ class TrayContractTests(unittest.TestCase):
         self.assertFalse(notifier._item_property(None, "", "", "", "ItemIsMenu").value)
         self.assertEqual(notifier._item_property(None, "", "", "", "Menu").value, "/MenuBar")
 
-    def test_menu_offers_fallback_icons_to_the_panel(self) -> None:
+    @patch.dict("os.environ", {"XDG_CURRENT_DESKTOP": "XFCE"})
+    def test_menu_offers_bundled_icons_to_the_panel(self) -> None:
         tray_module = load_tray_module()
         notifier = tray_module.StatusNotifier(
             StateController(AppState.IDLE_OK), *([lambda: None] * 7), FakeLogger()
         )
-        with tempfile.TemporaryDirectory() as data_dir:
-            installed = Path(data_dir) / "pynextcloud-sync" / "icons"
-            installed.mkdir(parents=True)
-            with patch.object(tray_module.GLib, "get_system_data_dirs", return_value=[data_dir]):
-                paths = notifier._menu_property(None, "", "", "", "IconThemePath").value
-            self.assertIn(str(installed), paths)
-            self.assertIn(str(TRAY_SOURCE.parents[3] / "data" / "icons" / "fallback"), paths)
+        bundle = bundled_icon_theme_path()
+        svg_dir = bundle / "hicolor/scalable/apps"
+        paths = notifier._menu_property(None, "", "", "", "IconThemePath").value
+        self.assertIn(str(bundle), paths)
+        self.assertIn(str(svg_dir), paths)
+        self.assertEqual(
+            notifier._item_property(None, "", "", "", "IconThemePath").value, str(bundle)
+        )
+        for item_id in (1, 2, 3, 4, 5, 7, 8):
+            icon_name = notifier._properties(item_id)["icon-name"].value
+            self.assertTrue((svg_dir / f"{icon_name}.svg").is_file(), icon_name)
+
+    @patch.dict("os.environ", {"XDG_CURRENT_DESKTOP": "LXQt"})
+    def test_lxqt_menu_uses_absolute_bundled_icon_paths(self) -> None:
+        tray_module = load_tray_module()
+        notifier = tray_module.StatusNotifier(
+            StateController(AppState.IDLE_OK), *([lambda: None] * 7), FakeLogger()
+        )
+        svg_dir = bundled_icon_theme_path() / "hicolor/scalable/apps"
+        icon = Path(notifier._properties(4)["icon-name"].value)
+        self.assertEqual(icon, svg_dir / "pynextcloud-sync-folder-symbolic.svg")
+        self.assertTrue(icon.is_file())
 
     def test_activation_and_menu_click_reply_before_running_window_action(self) -> None:
         tray_module = load_tray_module()
@@ -212,13 +228,13 @@ class TrayContractTests(unittest.TestCase):
         self.assertEqual(events, ["reply", "reply", "open", "open"])
 
     def test_every_application_state_has_a_status_asset(self) -> None:
-        icon_directory = TRAY_SOURCE.parents[3] / "data" / "icons" / "status"
+        icon_directory = bundled_icon_theme_path() / "tray"
         for state in AppState:
             with self.subTest(state=state):
                 presentation = presentation_for(state)
                 icon = (
                     icon_directory
-                    / f"pynextcloud-sync-status-{presentation.icon_key}-symbolic.svg"
+                    / f"pynextcloud-sync-status-{presentation.icon_key}-contrast.svg"
                 )
                 self.assertTrue(icon.is_file(), icon)
 
@@ -283,7 +299,7 @@ class TrayContractTests(unittest.TestCase):
         paused_properties = paused_change[4].value[1]
         self.assertTrue(
             paused_properties["IconName"].value.endswith(
-                "pynextcloud-sync-status-paused-symbolic.svg"
+                "pynextcloud-sync-status-paused-contrast.svg"
             )
         )
         self.assertEqual(paused_properties["Status"].value, "Active")
@@ -299,7 +315,7 @@ class TrayContractTests(unittest.TestCase):
         syncing_properties = syncing_change[4].value[1]
         self.assertTrue(
             syncing_properties["IconName"].value.endswith(
-                "pynextcloud-sync-status-syncing-symbolic.svg"
+                "pynextcloud-sync-status-syncing-contrast.svg"
             )
         )
         self.assertNotEqual(

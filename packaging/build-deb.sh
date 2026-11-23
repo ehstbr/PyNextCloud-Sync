@@ -49,13 +49,13 @@ install -d -m 0755 \
     "$package_root/usr/share/icons/hicolor/scalable/apps" \
     "$package_root/usr/share/icons/hicolor/scalable/places" \
     "$package_root/usr/share/icons/hicolor/symbolic/apps" \
-    "$package_root/usr/share/icons/hicolor/symbolic/status" \
     "$doc_dir"
 
+source_dir="$project_root/src/pynextcloud_sync"
 while IFS= read -r -d '' source_file; do
     relative_path="${source_file#$project_root/src/}"
     install -D -m 0644 "$source_file" "$python_dir/$relative_path"
-done < <(find "$project_root/src/pynextcloud_sync" -type f -name '*.py' -print0 | sort -z)
+done < <(find "$source_dir" -type f \( -name '*.py' -o -path "$source_dir/icons/*" \) -print0 | sort -z)
 
 install -m 0755 "$project_root/packaging/debian/pynextcloud-sync" "$package_root/usr/bin/pynextcloud-sync"
 install -m 0644 "$project_root/data/com.eduhcommerce.PyNextCloudSync.desktop" "$package_root/usr/share/applications/"
@@ -63,13 +63,6 @@ install -m 0644 "$project_root/data/com.eduhcommerce.PyNextCloudSync.metainfo.xm
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync.svg" "$package_root/usr/share/icons/hicolor/scalable/apps/"
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync-symbolic.svg" "$package_root/usr/share/icons/hicolor/symbolic/apps/"
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync-folder.svg" "$package_root/usr/share/icons/hicolor/scalable/places/"
-install -m 0644 "$project_root/data/icons/status/"*.svg "$package_root/usr/share/icons/hicolor/symbolic/status/"
-
-fallback_dir="$package_root/usr/share/$package_name/icons/hicolor"
-install -d -m 0755 "$fallback_dir/scalable/apps"
-install -m 0644 "$project_root/data/icons/fallback/hicolor/index.theme" "$fallback_dir/"
-install -m 0644 "$project_root/data/icons/fallback/hicolor/scalable/apps/"*.svg \
-    "$fallback_dir/scalable/apps/"
 
 for language in pt_BR es; do
     install -D -m 0644 \

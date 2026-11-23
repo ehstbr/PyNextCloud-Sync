@@ -1,3 +1,17 @@
+pynextcloud-sync (0.1.45) stable; urgency=medium
+
+  * Recommends GNOME Keyring or KWallet for the desktop Secret Service.
+  * Makes the GNOME AppIndicator extension an optional package suggestion.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 17:28:48 +0000
+
+pynextcloud-sync (0.1.44) stable; urgency=medium
+
+  * Bundles Adwaita and Libadwaita symbolic icons for the application interface and tray menu.
+  * Keeps the tray status icons visible on light and dark panels, including Xfce and KDE Plasma.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 13:05:37 +0000
+
 pynextcloud-sync (0.1.43) stable; urgency=medium
 
   * Divides the synchronization bar into the operations reported so far.

@@ -15,6 +15,22 @@
   <url type="bugtracker">https://github.com/ehstbr/PyNextCloud-Sync/issues</url>
   <url type="vcs-browser">https://github.com/ehstbr/PyNextCloud-Sync</url>
   <releases>
+    <release version="0.1.45" date="2026-11-23">
+      <description>
+        <ul>
+          <li>Recommends GNOME Keyring or KWallet for the desktop Secret Service.</li>
+          <li>Makes the GNOME AppIndicator extension an optional package suggestion.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.44" date="2026-11-23">
+      <description>
+        <ul>
+          <li>Bundles Adwaita and Libadwaita symbolic icons for the application interface and tray menu.</li>
+          <li>Keeps the tray status icons visible on light and dark panels, including Xfce and KDE Plasma.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.43" date="2026-11-22">
       <description>
         <ul>

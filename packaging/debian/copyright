@@ -16,3 +16,17 @@ License: GPL-3+
  .
  On Debian systems, the complete text of the GNU General Public License version
  3 can be found in /usr/share/common-licenses/GPL-3.
+
+Files: src/pynextcloud_sync/icons/hicolor/scalable/apps/*.svg
+Copyright: GNOME Project and Adwaita icon contributors
+License: LGPL-3
+ See src/pynextcloud_sync/icons/Adwaita-copyright.txt for the full attribution.
+ .
+ The complete license is in /usr/share/common-licenses/LGPL-3.
+
+Files: src/pynextcloud_sync/icons/hicolor/scalable/apps/pynextcloud-sync-external-link-symbolic.svg
+Copyright: GNOME Project and Libadwaita contributors
+License: LGPL-2.1+
+ See src/pynextcloud_sync/icons/Libadwaita-copyright.txt for attribution.
+ .
+ The complete license is in /usr/share/common-licenses/LGPL-2.1.

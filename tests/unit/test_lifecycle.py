@@ -102,7 +102,7 @@ class LifecycleContractTests(unittest.TestCase):
         source = (
             ROOT / "src" / "pynextcloud_sync" / "ui" / "update_window.py"
         ).read_text(encoding="utf-8")
-        self.assertIn('"dialog-warning-symbolic"', source)
+        self.assertIn('"pynextcloud-sync-dialog-warning-symbolic"', source)
         self.assertIn('_("Mandatory update available")', source)
         self.assertIn('Gtk.Button(label=_("Close Application"))', source)
         self.assertIn('if not mandatory:\n            not_now = Gtk.Button(label=_("Not Now"))', source)
