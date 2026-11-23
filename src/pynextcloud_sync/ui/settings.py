@@ -82,7 +82,7 @@ class ExclusionsDialog(Adw.Dialog):
         for pattern in patterns:
             row = Adw.ActionRow(title=pattern)
             remove = Gtk.Button(
-                icon_name="user-trash-symbolic",
+                icon_name="pynextcloud-sync-user-trash-symbolic",
                 valign=Gtk.Align.CENTER,
                 tooltip_text=_("Remove pattern"),
                 css_classes=["flat"],
@@ -175,7 +175,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         account = self.config.data["account"]
         page = Adw.PreferencesPage(
             title=_("Account"),
-            icon_name="avatar-default-symbolic",
+            icon_name="pynextcloud-sync-avatar-default-symbolic",
         )
         self.account_page = page
 
@@ -183,7 +183,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         self.account_status_row = Adw.ActionRow(
             title=_("Checking account status"),
             subtitle=_("Local account information is available below."),
-            icon_name="dialog-information-symbolic",
+            icon_name="pynextcloud-sync-dialog-information-symbolic",
         )
         status.add(self.account_status_row)
         page.add(status)
@@ -193,25 +193,25 @@ class SettingsWindow(Adw.PreferencesWindow):
             Adw.ActionRow(
                 title=_("Username"),
                 subtitle=account["login_name"],
-                icon_name="avatar-default-symbolic",
+                icon_name="pynextcloud-sync-avatar-default-symbolic",
             )
         )
         self.display_name_row = Adw.ActionRow(
             title=_("Display name"),
             subtitle=_("Not obtained yet"),
-            icon_name="contact-new-symbolic",
+            icon_name="pynextcloud-sync-contact-new-symbolic",
         )
         identity.add(self.display_name_row)
         self.email_row = Adw.ActionRow(
             title=_("Email"),
             subtitle=_("Not obtained yet"),
-            icon_name="mail-unread-symbolic",
+            icon_name="pynextcloud-sync-mail-unread-symbolic",
         )
         identity.add(self.email_row)
         self.quota_row = Adw.ActionRow(
             title=_("Storage quota"),
             subtitle=_("Not obtained yet"),
-            icon_name="drive-harddisk-symbolic",
+            icon_name="pynextcloud-sync-drive-harddisk-symbolic",
         )
         identity.add(self.quota_row)
         recorded_authorization = account.get("authorization_name")
@@ -221,14 +221,14 @@ class SettingsWindow(Adw.PreferencesWindow):
         self.authorization_row = Adw.ActionRow(
             title=_("Authorization name in Nextcloud"),
             subtitle=authorization_subtitle,
-            icon_name="computer-symbolic",
+            icon_name="pynextcloud-sync-computer-symbolic",
         )
         identity.add(self.authorization_row)
         identity.add(
             Adw.ActionRow(
                 title=_("Local folder"),
                 subtitle=account["local_root"],
-                icon_name="folder-symbolic",
+                icon_name="pynextcloud-sync-folder-symbolic",
             )
         )
         page.add(identity)
@@ -238,7 +238,7 @@ class SettingsWindow(Adw.PreferencesWindow):
             Adw.ActionRow(
                 title=_("Address"),
                 subtitle=account["server_url"],
-                icon_name="network-server-symbolic",
+                icon_name="pynextcloud-sync-network-server-symbolic",
             )
         )
         self.server_software_row = Adw.ActionRow(
@@ -264,10 +264,10 @@ class SettingsWindow(Adw.PreferencesWindow):
             subtitle=_(
                 "Renew authorization without changing the local folder or safety baseline."
             ),
-            icon_name="view-refresh-symbolic",
+            icon_name="pynextcloud-sync-view-refresh-symbolic",
             activatable=True,
         )
-        reconnect.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        reconnect.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         reconnect.connect(
             "activated", lambda _row: self.on_reconnect_account(self)
         )
@@ -275,10 +275,10 @@ class SettingsWindow(Adw.PreferencesWindow):
         open_server = Adw.ActionRow(
             title=_("Open Nextcloud in Browser"),
             subtitle=account["server_url"],
-            icon_name="web-browser-symbolic",
+            icon_name="pynextcloud-sync-web-browser-symbolic",
             activatable=True,
         )
-        open_server.add_suffix(Gtk.Image.new_from_icon_name("external-link-symbolic"))
+        open_server.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-external-link-symbolic"))
         open_server.connect(
             "activated",
             lambda _row: Gio.AppInfo.launch_default_for_uri(
@@ -289,10 +289,10 @@ class SettingsWindow(Adw.PreferencesWindow):
         open_folder = Adw.ActionRow(
             title=_("Open Local Folder"),
             subtitle=account["local_root"],
-            icon_name="folder-open-symbolic",
+            icon_name="pynextcloud-sync-folder-open-symbolic",
             activatable=True,
         )
-        open_folder.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        open_folder.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         open_folder.connect(
             "activated",
             lambda _row: Gio.AppInfo.launch_default_for_uri(
@@ -303,7 +303,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         refresh = Adw.ActionRow(
             title=_("Refresh Account Information"),
             subtitle=_("Load current account and server details."),
-            icon_name="view-refresh-symbolic",
+            icon_name="pynextcloud-sync-view-refresh-symbolic",
             activatable=True,
         )
         refresh.connect("activated", lambda _row: self.refresh_account_details())
@@ -311,7 +311,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         remove = Adw.ActionRow(
             title=_("Remove Account"),
             subtitle=_("Local files will not be deleted."),
-            icon_name="user-trash-symbolic",
+            icon_name="pynextcloud-sync-user-trash-symbolic",
             activatable=True,
         )
         remove.add_css_class("error")
@@ -327,19 +327,19 @@ class SettingsWindow(Adw.PreferencesWindow):
         if snapshot.state == AppState.AUTH_REQUIRED:
             title = _("Authorization required")
             subtitle = _("Reconnect the account to resume synchronization.")
-            icon = "dialog-password-symbolic"
+            icon = "pynextcloud-sync-dialog-password-symbolic"
         elif snapshot.state == AppState.KEYRING_LOCKED:
             title = _("Password keyring locked")
             subtitle = _("Unlock the password keyring to access the account.")
-            icon = "changes-prevent-symbolic"
+            icon = "pynextcloud-sync-changes-prevent-symbolic"
         elif snapshot.state == AppState.SYNCING:
             title = _("Connected and synchronizing")
             subtitle = snapshot.message or _("The account authorization is active.")
-            icon = "emblem-synchronizing-symbolic"
+            icon = "pynextcloud-sync-emblem-synchronizing-symbolic"
         else:
             title = _("Account configured")
             subtitle = snapshot.message or _("The account is ready for synchronization.")
-            icon = "emblem-ok-symbolic"
+            icon = "pynextcloud-sync-emblem-ok-symbolic"
         self.account_status_row.set_title(title)
         self.account_status_row.set_subtitle(_(subtitle))
         self.account_status_row.set_icon_name(icon)
@@ -475,7 +475,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         self.server_status_row.set_subtitle(status)
 
     def _build_general(self) -> None:
-        page = Adw.PreferencesPage(title=_("General"), icon_name="preferences-system-symbolic")
+        page = Adw.PreferencesPage(title=_("General"), icon_name="pynextcloud-sync-preferences-system-symbolic")
         startup = Adw.PreferencesGroup(title=_("Startup"))
         self.autostart = Adw.SwitchRow(
             title=_("Start PyNextCloud Sync when I sign in"),
@@ -499,7 +499,7 @@ class SettingsWindow(Adw.PreferencesWindow):
             Adw.ActionRow(
                 title=_("NextCloud folder"),
                 subtitle=account["local_root"],
-                icon_name="folder-symbolic",
+                icon_name="pynextcloud-sync-folder-symbolic",
             )
         )
         integration_state = self.desktop_integration.state
@@ -579,7 +579,7 @@ class SettingsWindow(Adw.PreferencesWindow):
 
     def _build_sync(self) -> None:
         sync = self.config.data["sync"]
-        page = Adw.PreferencesPage(title=_("Synchronization"), icon_name="emblem-synchronizing-symbolic")
+        page = Adw.PreferencesPage(title=_("Synchronization"), icon_name="pynextcloud-sync-emblem-synchronizing-symbolic")
         manual_group = Adw.PreferencesGroup()
         self.manual_banner = Adw.Banner(
             title=_("Automatic synchronization is off. Files synchronize only with Sync Now."),
@@ -649,7 +649,7 @@ class SettingsWindow(Adw.PreferencesWindow):
             subtitle=_("Names, extensions, and wildcard patterns"),
             activatable=True,
         )
-        edit_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        edit_row.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         edit_row.connect("activated", self._show_exclusions)
         excluded.add(edit_row)
         page.add(excluded)
@@ -662,7 +662,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         self.add(page)
 
     def _build_network(self) -> None:
-        page = Adw.PreferencesPage(title=_("Network"), icon_name="network-wired-symbolic")
+        page = Adw.PreferencesPage(title=_("Network"), icon_name="pynextcloud-sync-network-wired-symbolic")
         proxy = Adw.PreferencesGroup(title=_("Proxy"))
         self.proxy = Adw.EntryRow(title=_("Custom HTTP proxy"))
         self.proxy.set_text(self.config.data["network"].get("custom_proxy") or "")
@@ -682,7 +682,7 @@ class SettingsWindow(Adw.PreferencesWindow):
         self.add(page)
 
     def _build_advanced(self) -> None:
-        page = Adw.PreferencesPage(title=_("Advanced"), icon_name="applications-system-symbolic")
+        page = Adw.PreferencesPage(title=_("Advanced"), icon_name="pynextcloud-sync-applications-system-symbolic")
         group = Adw.PreferencesGroup(title=_("Logging"))
         logging_config = self.config.data["logging"]
         self.save_logs = Adw.SwitchRow(
@@ -701,17 +701,17 @@ class SettingsWindow(Adw.PreferencesWindow):
         log_folder = Adw.ActionRow(
             title=_("Log folder"),
             subtitle=str(self.runtime.logger.directory),
-            icon_name="folder-symbolic",
+            icon_name="pynextcloud-sync-folder-symbolic",
             activatable=True,
         )
-        log_folder.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        log_folder.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         log_folder.connect("activated", self._open_log_folder)
         group.add(log_folder)
         group.add(
             Adw.ActionRow(
                 title=_("Daily file naming"),
                 subtitle="pynextcloud-sync-YYYY-MM-DD.log",
-                icon_name="text-x-generic-symbolic",
+                icon_name="pynextcloud-sync-text-x-generic-symbolic",
             )
         )
         self.detailed = Adw.SwitchRow(
@@ -748,7 +748,7 @@ class SettingsWindow(Adw.PreferencesWindow):
             Adw.ActionRow(
                 title=_("Empty, missing, replaced, or unreadable folder"),
                 subtitle=_("Always requires a safety review regardless of the limits above."),
-                icon_name="security-high-symbolic",
+                icon_name="pynextcloud-sync-security-high-symbolic",
             )
         )
         page.add(safety)

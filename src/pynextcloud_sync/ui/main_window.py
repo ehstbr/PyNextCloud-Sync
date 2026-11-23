@@ -23,18 +23,18 @@ from .history import HistoryWindow
 
 
 STATE_PRESENTATION = {
-    AppState.UNCONFIGURED: ("dialog-question-symbolic", _("Not Configured")),
-    AppState.IDLE_OK: ("emblem-ok-symbolic", _("Synchronized")),
-    AppState.IDLE_MANUAL_ONLY: ("media-playback-pause-symbolic", _("Automatic Sync Is Off")),
-    AppState.SYNC_QUEUED: ("appointment-soon-symbolic", _("Synchronization Scheduled")),
-    AppState.SYNCING: ("emblem-synchronizing-symbolic", _("Synchronizing…")),
-    AppState.PAUSED_USER: ("media-playback-pause-symbolic", _("Paused")),
-    AppState.PAUSED_BATTERY: ("battery-symbolic", _("Paused on Battery")),
-    AppState.OFFLINE: ("network-offline-symbolic", _("Offline")),
-    AppState.ERROR: ("dialog-error-symbolic", _("Synchronization Error")),
-    AppState.AUTH_REQUIRED: ("dialog-password-symbolic", _("Account Needs Attention")),
-    AppState.KEYRING_LOCKED: ("changes-prevent-symbolic", _("Password Keyring Locked")),
-    AppState.SAFETY_REVIEW: ("security-high-symbolic", _("Safety Review Required")),
+    AppState.UNCONFIGURED: ("pynextcloud-sync-dialog-question-symbolic", _("Not Configured")),
+    AppState.IDLE_OK: ("pynextcloud-sync-emblem-ok-symbolic", _("Synchronized")),
+    AppState.IDLE_MANUAL_ONLY: ("pynextcloud-sync-media-playback-pause-symbolic", _("Automatic Sync Is Off")),
+    AppState.SYNC_QUEUED: ("pynextcloud-sync-appointment-soon-symbolic", _("Synchronization Scheduled")),
+    AppState.SYNCING: ("pynextcloud-sync-emblem-synchronizing-symbolic", _("Synchronizing…")),
+    AppState.PAUSED_USER: ("pynextcloud-sync-media-playback-pause-symbolic", _("Paused")),
+    AppState.PAUSED_BATTERY: ("pynextcloud-sync-battery-symbolic", _("Paused on Battery")),
+    AppState.OFFLINE: ("pynextcloud-sync-network-offline-symbolic", _("Offline")),
+    AppState.ERROR: ("pynextcloud-sync-dialog-error-symbolic", _("Synchronization Error")),
+    AppState.AUTH_REQUIRED: ("pynextcloud-sync-dialog-password-symbolic", _("Account Needs Attention")),
+    AppState.KEYRING_LOCKED: ("pynextcloud-sync-changes-prevent-symbolic", _("Password Keyring Locked")),
+    AppState.SAFETY_REVIEW: ("pynextcloud-sync-security-high-symbolic", _("Safety Review Required")),
 }
 
 SYNC_PHASE_DESCRIPTIONS = {
@@ -102,12 +102,12 @@ class MainWindow(Adw.ApplicationWindow):
         header = Adw.HeaderBar()
         header.set_title_widget(Adw.WindowTitle(title=APP_NAME, subtitle=_("Nextcloud file synchronization")))
         settings = Gtk.Button(
-            icon_name="emblem-system-symbolic", tooltip_text=_("Settings"), css_classes=["flat"]
+            icon_name="pynextcloud-sync-emblem-system-symbolic", tooltip_text=_("Settings"), css_classes=["flat"]
         )
         settings.connect("clicked", self.show_settings)
         header.pack_end(settings)
         about = Gtk.Button(
-            icon_name="help-about-symbolic", tooltip_text=_("About"), css_classes=["flat"]
+            icon_name="pynextcloud-sync-help-about-symbolic", tooltip_text=_("About"), css_classes=["flat"]
         )
         about.connect("clicked", self._show_about)
         header.pack_end(about)
@@ -134,7 +134,7 @@ class MainWindow(Adw.ApplicationWindow):
         status_box.set_margin_bottom(14)
         status_box.set_margin_start(16)
         status_box.set_margin_end(16)
-        self.status_icon = Gtk.Image(icon_name="emblem-ok-symbolic", pixel_size=48)
+        self.status_icon = Gtk.Image(icon_name="pynextcloud-sync-emblem-ok-symbolic", pixel_size=48)
         self.status_icon.set_valign(Gtk.Align.CENTER)
         status_box.append(self.status_icon)
         status_text = Gtk.Box(
@@ -193,16 +193,16 @@ class MainWindow(Adw.ApplicationWindow):
             _compact_action_row(
                 title=account["login_name"],
                 subtitle=account["server_url"],
-                icon_name="avatar-default-symbolic",
+                icon_name="pynextcloud-sync-avatar-default-symbolic",
             )
         )
         folder_row = _compact_action_row(
             title=_("Local Folder"),
             subtitle=account["local_root"],
-            icon_name="folder-symbolic",
+            icon_name="pynextcloud-sync-folder-symbolic",
             activatable=True,
         )
-        folder_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        folder_row.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         folder_row.connect("activated", lambda _row: self.open_folder())
         account_list.append(folder_row)
         quota_row = Gtk.ListBoxRow(activatable=False, selectable=False)
@@ -212,7 +212,7 @@ class MainWindow(Adw.ApplicationWindow):
         quota_box.set_margin_start(14)
         quota_box.set_margin_end(14)
         quota_icon = Gtk.Image(
-            icon_name="drive-harddisk-symbolic",
+            icon_name="pynextcloud-sync-drive-harddisk-symbolic",
             pixel_size=20,
             valign=Gtk.Align.CENTER,
         )
@@ -246,13 +246,13 @@ class MainWindow(Adw.ApplicationWindow):
 
         self.buttons = Gtk.Box(spacing=12, homogeneous=True)
         self.sync_content = Adw.ButtonContent(
-            label=_("Sync Now"), icon_name="emblem-synchronizing-symbolic"
+            label=_("Sync Now"), icon_name="pynextcloud-sync-emblem-synchronizing-symbolic"
         )
         self.sync_button = Gtk.Button(child=self.sync_content, css_classes=["suggested-action", "pill"])
         self.sync_button.connect("clicked", self._sync_clicked)
         self.buttons.append(self.sync_button)
         self.pause_content = Adw.ButtonContent(
-            label=_("Pause Sync"), icon_name="media-playback-pause-symbolic"
+            label=_("Pause Sync"), icon_name="pynextcloud-sync-media-playback-pause-symbolic"
         )
         self.pause_button = Gtk.Button(child=self.pause_content, css_classes=["pill"])
         self.pause_button.connect("clicked", self._pause_clicked)
@@ -269,10 +269,10 @@ class MainWindow(Adw.ApplicationWindow):
         )
         self.view_history_row = _compact_action_row(
             title=_("View Synchronization History"),
-            icon_name="document-open-recent-symbolic",
+            icon_name="pynextcloud-sync-document-open-recent-symbolic",
             activatable=True,
         )
-        self.view_history_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        self.view_history_row.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         self.view_history_row.connect("activated", lambda _row: self._show_history())
         self.activity_list.append(self.view_history_row)
         content.append(self.activity_list)
@@ -340,25 +340,25 @@ class MainWindow(Adw.ApplicationWindow):
         paused = snapshot.state == AppState.PAUSED_USER
         self.pause_content.set_label(_("Resume Sync") if paused else _("Pause Sync"))
         self.pause_content.set_icon_name(
-            "media-playback-start-symbolic" if paused else "media-playback-pause-symbolic"
+            "pynextcloud-sync-media-playback-start-symbolic" if paused else "pynextcloud-sync-media-playback-pause-symbolic"
         )
         self.status_action.set_visible(snapshot.state == AppState.AUTH_REQUIRED)
         if snapshot.state == AppState.SAFETY_REVIEW:
             self.sync_content.set_label(_("Review Safety Alert"))
-            self.sync_content.set_icon_name("security-high-symbolic")
+            self.sync_content.set_icon_name("pynextcloud-sync-security-high-symbolic")
         elif snapshot.state == AppState.KEYRING_LOCKED:
             self.sync_content.set_label(_("Unlock Password Keyring"))
-            self.sync_content.set_icon_name("changes-prevent-symbolic")
+            self.sync_content.set_icon_name("pynextcloud-sync-changes-prevent-symbolic")
         elif snapshot.state == AppState.AUTH_REQUIRED:
             self.sync_content.set_label(_("Reconnect Account"))
-            self.sync_content.set_icon_name("view-refresh-symbolic")
+            self.sync_content.set_icon_name("pynextcloud-sync-view-refresh-symbolic")
         else:
             self.sync_content.set_label(
                 _("Sync Once")
                 if snapshot.state in {AppState.PAUSED_USER, AppState.PAUSED_BATTERY}
                 else _("Sync Now")
             )
-            self.sync_content.set_icon_name("emblem-synchronizing-symbolic")
+            self.sync_content.set_icon_name("pynextcloud-sync-emblem-synchronizing-symbolic")
         needs_review = snapshot.state == AppState.SAFETY_REVIEW
         if self._safety_review_active != needs_review and self.history_window:
             self.history_window.activity.refresh()

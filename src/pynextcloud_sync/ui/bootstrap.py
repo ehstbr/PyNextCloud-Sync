@@ -175,7 +175,7 @@ class BootstrapWindow(Adw.ApplicationWindow):
         box.set_margin_end(24)
         page.set_child(box)
 
-        icon = Gtk.Image.new_from_icon_name("security-high-symbolic")
+        icon = Gtk.Image.new_from_icon_name("pynextcloud-sync-security-high-symbolic")
         icon.set_pixel_size(48)
         box.append(icon)
         self.progress_label = Gtk.Label(
@@ -354,7 +354,7 @@ class BootstrapWindow(Adw.ApplicationWindow):
 
     def _build_error_page(self) -> None:
         page = Adw.StatusPage(
-            icon_name="dialog-error-symbolic",
+            icon_name="pynextcloud-sync-dialog-error-symbolic",
             title=_("Safety analysis could not finish"),
         )
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -514,12 +514,12 @@ class BootstrapWindow(Adw.ApplicationWindow):
 
         summary = Adw.PreferencesGroup(title=_("Analysis Summary"))
         for title, value, icon in (
-            (_("Files on this computer"), analysis.local_file_count, "computer-symbolic"),
-            (_("Files on Nextcloud"), analysis.remote_file_count, "network-server-symbolic"),
-            (_("Only on this computer"), len(analysis.local_only), "go-up-symbolic"),
-            (_("Only on Nextcloud"), len(analysis.remote_only), "go-down-symbolic"),
-            (_("Identical paths"), len(analysis.identical), "emblem-ok-symbolic"),
-            (_("Conflicts requiring a policy"), len(analysis.conflicts), "dialog-warning-symbolic"),
+            (_("Files on this computer"), analysis.local_file_count, "pynextcloud-sync-computer-symbolic"),
+            (_("Files on Nextcloud"), analysis.remote_file_count, "pynextcloud-sync-network-server-symbolic"),
+            (_("Only on this computer"), len(analysis.local_only), "pynextcloud-sync-go-up-symbolic"),
+            (_("Only on Nextcloud"), len(analysis.remote_only), "pynextcloud-sync-go-down-symbolic"),
+            (_("Identical paths"), len(analysis.identical), "pynextcloud-sync-emblem-ok-symbolic"),
+            (_("Conflicts requiring a policy"), len(analysis.conflicts), "pynextcloud-sync-dialog-warning-symbolic"),
         ):
             summary.add(Adw.ActionRow(title=title, subtitle=str(value), icon_name=icon))
         self.review_content.append(summary)
@@ -601,7 +601,7 @@ class BootstrapWindow(Adw.ApplicationWindow):
             Adw.ActionRow(
                 title=_("Planned additions and conflicts"),
                 subtitle=preview or _("No file transfer is required."),
-                icon_name="view-list-symbolic",
+                icon_name="pynextcloud-sync-view-list-symbolic",
             )
         )
         self.review_content.append(path_group)

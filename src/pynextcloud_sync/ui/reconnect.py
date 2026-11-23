@@ -80,7 +80,7 @@ class ReconnectWindow(Adw.ApplicationWindow):
         )
         introduction.append(
             Gtk.Image(
-                icon_name="dialog-password-symbolic",
+                icon_name="pynextcloud-sync-dialog-password-symbolic",
                 pixel_size=64,
                 halign=Gtk.Align.CENTER,
             )
@@ -112,14 +112,14 @@ class ReconnectWindow(Adw.ApplicationWindow):
             Adw.ActionRow(
                 title=account["login_name"],
                 subtitle=account["server_url"],
-                icon_name="avatar-default-symbolic",
+                icon_name="pynextcloud-sync-avatar-default-symbolic",
             )
         )
         account_group.add(
             Adw.ActionRow(
                 title=_("New authorization name"),
                 subtitle=authorization_name(),
-                icon_name="computer-symbolic",
+                icon_name="pynextcloud-sync-computer-symbolic",
             )
         )
         content.append(account_group)

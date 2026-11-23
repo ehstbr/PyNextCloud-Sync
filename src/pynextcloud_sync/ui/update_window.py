@@ -59,9 +59,9 @@ class UpdateWindow(Adw.ApplicationWindow):
 
         icon = Gtk.Image(
             icon_name=(
-                "dialog-warning-symbolic"
+                "pynextcloud-sync-dialog-warning-symbolic"
                 if mandatory
-                else "software-update-available-symbolic"
+                else "pynextcloud-sync-software-update-available-symbolic"
             ),
             pixel_size=56,
         )

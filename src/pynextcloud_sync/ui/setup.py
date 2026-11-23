@@ -145,10 +145,10 @@ class SetupWindow(Adw.ApplicationWindow):
         browser_row = Adw.ActionRow(
             title=_("Sign in with browser"),
             subtitle=_("Recommended. Supports two-factor authentication."),
-            icon_name="web-browser-symbolic",
+            icon_name="pynextcloud-sync-web-browser-symbolic",
             activatable=True,
         )
-        browser_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        browser_row.add_suffix(Gtk.Image.new_from_icon_name("pynextcloud-sync-go-next-symbolic"))
         browser_row.connect("activated", self._browser_login)
         browser_group.add(browser_row)
         content.append(browser_group)
@@ -199,7 +199,7 @@ class SetupWindow(Adw.ApplicationWindow):
         group = Adw.PreferencesGroup()
         self.folder_entry = Adw.EntryRow(title=_("Local NextCloud folder"))
         self.folder_entry.set_text(str(default_sync_root()))
-        choose = Gtk.Button(icon_name="folder-open-symbolic", valign=Gtk.Align.CENTER, css_classes=["flat"])
+        choose = Gtk.Button(icon_name="pynextcloud-sync-folder-open-symbolic", valign=Gtk.Align.CENTER, css_classes=["flat"])
         choose.connect("clicked", self._choose_folder)
         self.folder_entry.add_suffix(choose)
         group.add(self.folder_entry)
@@ -340,11 +340,11 @@ class SetupWindow(Adw.ApplicationWindow):
         while row := self.summary_list.get_first_child():
             self.summary_list.remove(row)
         for title, subtitle, icon in (
-            (_("Server"), self.server, "network-server-symbolic"),
-            (_("Account"), self.username, "avatar-default-symbolic"),
-            (_("Local Folder"), str(root), "folder-symbolic"),
-            (_("Local Detection"), _("Filesystem monitor"), "folder-saved-search-symbolic"),
-            (_("Remote Detection"), _("Server push + every 10 minutes"), "network-transmit-receive-symbolic"),
+            (_("Server"), self.server, "pynextcloud-sync-network-server-symbolic"),
+            (_("Account"), self.username, "pynextcloud-sync-avatar-default-symbolic"),
+            (_("Local Folder"), str(root), "pynextcloud-sync-folder-symbolic"),
+            (_("Local Detection"), _("Filesystem monitor"), "pynextcloud-sync-folder-saved-search-symbolic"),
+            (_("Remote Detection"), _("Server push + every 10 minutes"), "pynextcloud-sync-network-transmit-receive-symbolic"),
         ):
             self.summary_list.append(Adw.ActionRow(title=title, subtitle=subtitle, icon_name=icon))
         self.stack.set_visible_child_name("summary")

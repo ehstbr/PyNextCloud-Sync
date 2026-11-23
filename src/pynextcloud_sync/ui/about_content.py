@@ -31,6 +31,20 @@ def terms_text() -> str:
 def release_notes_markup() -> str:
     sections = [
         (
+            _("Version 0.1.45"),
+            [
+                _("Recommends GNOME Keyring or KWallet for the desktop Secret Service."),
+                _("Makes the GNOME AppIndicator extension an optional package suggestion."),
+            ],
+        ),
+        (
+            _("Version 0.1.44"),
+            [
+                _("Bundles Adwaita and Libadwaita symbolic icons for the application interface and tray menu."),
+                _("Keeps the tray status icons visible on light and dark panels, including Xfce and KDE Plasma."),
+            ],
+        ),
+        (
             _("Version 0.1.43"),
             [
                 _("Sizes the synchronization bar to the reported file operations."),

@@ -10,19 +10,19 @@ from pynextcloud_sync.util.i18n import _, ngettext
 
 
 _OUTCOMES = {
-    "completed": (_("Synchronization completed"), "emblem-ok-symbolic", "success"),
-    "conflict": (_("Synchronization completed with conflicts"), "dialog-warning-symbolic", "warning"),
-    "failed": (_("Synchronization failed"), "dialog-error-symbolic", "error"),
-    "interrupted": (_("Synchronization interrupted"), "media-playback-pause-symbolic", "warning"),
-    "blocked": (_("Synchronization blocked for safety"), "security-high-symbolic", "warning"),
+    "completed": (_("Synchronization completed"), "pynextcloud-sync-emblem-ok-symbolic", "success"),
+    "conflict": (_("Synchronization completed with conflicts"), "pynextcloud-sync-dialog-warning-symbolic", "warning"),
+    "failed": (_("Synchronization failed"), "pynextcloud-sync-dialog-error-symbolic", "error"),
+    "interrupted": (_("Synchronization interrupted"), "pynextcloud-sync-media-playback-pause-symbolic", "warning"),
+    "blocked": (_("Synchronization blocked for safety"), "pynextcloud-sync-security-high-symbolic", "warning"),
 }
 
 _FILE_EVENTS = {
-    "download": (_("Downloaded"), "go-down-symbolic"),
-    "upload": (_("Uploaded"), "go-up-symbolic"),
-    "remove": (_("Removed"), "user-trash-symbolic"),
-    "rename": (_("Moved or renamed"), "document-open-recent-symbolic"),
-    "mkdir": (_("Folder created"), "folder-symbolic"),
+    "download": (_("Downloaded"), "pynextcloud-sync-go-down-symbolic"),
+    "upload": (_("Uploaded"), "pynextcloud-sync-go-up-symbolic"),
+    "remove": (_("Removed"), "pynextcloud-sync-user-trash-symbolic"),
+    "rename": (_("Moved or renamed"), "pynextcloud-sync-document-open-recent-symbolic"),
+    "mkdir": (_("Folder created"), "pynextcloud-sync-folder-symbolic"),
 }
 
 
@@ -99,13 +99,13 @@ def event_row(event: ActivityEvent) -> Adw.ActionRow:
         title, subtitle, icon = (
             _("Safety baseline updated"),
             _("A reference of local files was saved to detect unexpected deletions."),
-            "security-high-symbolic",
+            "pynextcloud-sync-security-high-symbolic",
         )
     else:
         title, subtitle, icon = (
             _("Safety baseline could not be updated"),
             _("See the detailed log for the safety baseline error."),
-            "dialog-warning-symbolic",
+            "pynextcloud-sync-dialog-warning-symbolic",
         )
     child = Adw.ActionRow(title=title, subtitle=subtitle, use_markup=False)
     image = Gtk.Image(icon_name=icon)

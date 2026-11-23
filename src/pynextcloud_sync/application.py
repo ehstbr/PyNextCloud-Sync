@@ -34,7 +34,7 @@ from pynextcloud_sync.ui.setup import SetupWindow
 from pynextcloud_sync.ui.tray import StatusNotifier
 from pynextcloud_sync.ui.update_window import UpdateWindow
 from pynextcloud_sync.util.i18n import _
-from pynextcloud_sync.util.paths import fallback_icon_theme_paths, project_root
+from pynextcloud_sync.util.paths import bundled_icon_theme_path, project_root
 
 
 class PyNextCloudApplication(Adw.Application):
@@ -131,12 +131,8 @@ class PyNextCloudApplication(Adw.Application):
             return
         theme = Gtk.IconTheme.get_for_display(display)
         source = project_root() / "data" / "icons"
-        # Extend hicolor privately so the user's theme still takes precedence.
-        paths = [
-            source,
-            source / "status",
-            *fallback_icon_theme_paths(GLib.get_system_data_dirs()),
-        ]
+        bundle = bundled_icon_theme_path()
+        paths = [source, bundle, bundle / "hicolor/scalable/apps"]
         for path in paths:
             if path.is_dir():
                 theme.add_search_path(str(path))

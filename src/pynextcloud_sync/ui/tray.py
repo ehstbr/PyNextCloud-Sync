@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Callable
 
@@ -10,7 +11,7 @@ from gi.repository import GdkPixbuf, Gio, GLib
 
 from pynextcloud_sync.core.state import StateSnapshot
 from pynextcloud_sync.ui.tray_state import TrayPresentation, presentation_for
-from pynextcloud_sync.util.paths import fallback_icon_theme_paths, project_root
+from pynextcloud_sync.util.paths import bundled_icon_theme_path, project_root
 from pynextcloud_sync.util.i18n import _
 
 
@@ -97,6 +98,8 @@ class StatusNotifier:
         self.revision = 1
         self.snapshot = state_controller.snapshot
         self.application_icon = self._find_application_icon()
+        desktops = os.environ.get("XDG_CURRENT_DESKTOP", "").casefold().split(":")
+        self._menu_uses_icon_paths = "lxqt" in desktops
         self._pixmap_cache: dict[Path, GLib.Variant] = {}
         self._item_properties: dict[str, GLib.Variant] | None = None
         self._unsubscribe: Callable[[], None] | None = state_controller.subscribe(
@@ -114,23 +117,11 @@ class StatusNotifier:
     def _find_application_icon(self) -> Path | None:
         return next((path for path in self._icon_candidates() if path.is_file()), None)
 
-    def _status_icon_candidates(self, icon_key: str) -> list[Path]:
-        filename = f"pynextcloud-sync-status-{icon_key}-symbolic.svg"
-        return [
-            project_root() / "data" / "icons" / "status" / filename,
-            Path("/usr/share/icons/hicolor/symbolic/status") / filename,
-            Path("/usr/local/share/icons/hicolor/symbolic/status") / filename,
-        ]
-
     def _find_status_icon(self, presentation: TrayPresentation) -> Path | None:
-        return next(
-            (
-                path
-                for path in self._status_icon_candidates(presentation.icon_key)
-                if path.is_file()
-            ),
-            self.application_icon,
-        )
+        # StatusNotifier hosts can render SVGs without applying a foreground color.
+        filename = f"pynextcloud-sync-status-{presentation.icon_key}-contrast.svg"
+        icon = bundled_icon_theme_path() / "tray" / filename
+        return icon if icon.is_file() else self.application_icon
 
     def _icon_data(
         self, presentation: TrayPresentation
@@ -142,7 +133,7 @@ class StatusNotifier:
         if pixmaps is None:
             pixmaps = self._load_icon_pixmaps(source)
             self._pixmap_cache[source] = pixmaps
-        return str(source), str(source.parent), pixmaps
+        return str(source), str(bundled_icon_theme_path()), pixmaps
 
     def _load_icon_pixmaps(self, source: Path) -> GLib.Variant:
         """Provide a branded fallback when the tray host cannot resolve IconName."""
@@ -306,13 +297,8 @@ class StatusNotifier:
         return values[name]
 
     def _icon_theme_paths(self) -> list[str]:
-        source_icons = project_root() / "data" / "icons"
-        candidates = [
-            source_icons / "status",
-            Path("/usr/share/icons/hicolor/symbolic/status"),
-            Path("/usr/local/share/icons/hicolor/symbolic/status"),
-            *fallback_icon_theme_paths(GLib.get_system_data_dirs()),
-        ]
+        bundle = bundled_icon_theme_path()
+        candidates = [bundle, bundle / "hicolor/scalable/apps"]
         return [str(path) for path in candidates if path.is_dir()]
 
     def _properties(self, item_id: int) -> dict[str, GLib.Variant]:
@@ -340,16 +326,21 @@ class StatusNotifier:
         if item_id == 6:
             properties["type"] = GLib.Variant("s", "separator")
         icon_names = {
-            1: "window-new-symbolic",
-            2: "security-high-symbolic" if safety_review else "emblem-synchronizing-symbolic",
-            3: "media-playback-start-symbolic" if paused else "media-playback-pause-symbolic",
-            4: "folder-symbolic",
-            5: "text-x-generic-symbolic",
-            7: "emblem-system-symbolic",
-            8: "application-exit-symbolic",
+            1: "pynextcloud-sync-window-new-symbolic",
+            2: "pynextcloud-sync-security-high-symbolic" if safety_review else "pynextcloud-sync-emblem-synchronizing-symbolic",
+            3: "pynextcloud-sync-media-playback-start-symbolic" if paused else "pynextcloud-sync-media-playback-pause-symbolic",
+            4: "pynextcloud-sync-folder-symbolic",
+            5: "pynextcloud-sync-text-x-generic-symbolic",
+            7: "pynextcloud-sync-emblem-system-symbolic",
+            8: "pynextcloud-sync-application-exit-symbolic",
         }
-        if item_id in icon_names:
-            properties["icon-name"] = GLib.Variant("s", icon_names[item_id])
+        icon_name = icon_names.get(item_id)
+        if icon_name:
+            if self._menu_uses_icon_paths:
+                # LXQt looks up menu icons in its own theme and accepts absolute paths.
+                menu_icons = bundled_icon_theme_path() / "hicolor/scalable/apps"
+                icon_name = str(menu_icons / f"{icon_name}.svg")
+            properties["icon-name"] = GLib.Variant("s", icon_name)
         return properties
 
     def _layout_data(
