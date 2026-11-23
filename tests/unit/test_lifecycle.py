@@ -98,18 +98,14 @@ class LifecycleContractTests(unittest.TestCase):
         self.assertNotIn("set_transient_for", present_main)
         self.assertNotIn("set_transient_for", foreground)
 
-    def test_mandatory_notice_uses_urgent_copy_and_replaces_not_now_with_quit(self) -> None:
+    def test_update_notices_offer_quit_and_only_optional_can_be_dismissed(self) -> None:
         source = (
             ROOT / "src" / "pynextcloud_sync" / "ui" / "update_window.py"
         ).read_text(encoding="utf-8")
         self.assertIn('"dialog-warning-symbolic"', source)
         self.assertIn('_("Mandatory update available")', source)
         self.assertIn('Gtk.Button(label=_("Close Application"))', source)
-        self.assertNotIn("not_now.set_sensitive(False)", source)
-        self.assertLess(
-            source.index("if mandatory:\n            quit_button"),
-            source.index("else:\n            not_now"),
-        )
+        self.assertIn('if not mandatory:\n            not_now = Gtk.Button(label=_("Not Now"))', source)
 
     def test_tray_settings_opens_an_independent_preferences_window(self) -> None:
         application = ROOT / "src" / "pynextcloud_sync" / "application.py"
@@ -324,7 +320,8 @@ class LifecycleContractTests(unittest.TestCase):
         self.assertIn("self.quota_progress.set_fraction", details)
         self.assertIn('self.quota_progress.set_text(f"{percent}%")', details)
         self.assertIn('self.quota_progress.set_text("∞")', details)
-        self.assertNotIn(".pulse()", source)
+        self.assertNotIn(".pulse()", details)
+        self.assertNotIn("quota_progress.pulse()", source)
         self.assertNotIn("set_pulse_step", source)
         self.assertIn("Limited only by available server storage", details)
 

@@ -6,7 +6,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from pynextcloud_sync.nextcloud.activity import ActivityCapture, ActivityEvent, ActivityReport
+from pynextcloud_sync.nextcloud.activity import (
+    ActivityCapture, ActivityEvent, ActivityReport, SyncPhase, SyncProgress,
+)
 from pynextcloud_sync.storage.history import SyncAttempt, SyncHistory
 from pynextcloud_sync.storage.log import AppLogger
 
@@ -30,6 +32,64 @@ def downloaded(path: str) -> str:
 
 
 class ActivityTests(unittest.TestCase):
+    def test_live_progress_combines_transfers_and_deletions(self) -> None:
+        activity = ActivityCapture()
+        self.assertEqual(activity.progress(), SyncProgress())
+        jobs = (
+            ("download.txt", "PropagateDownloadFile", "NEW"),
+            ("upload.txt", "PropagateUploadFileNG", "SYNC"),
+            ("local.txt", "PropagateLocalRemove", "REMOVE"),
+            ("remote.txt", "PropagateRemoteDelete", "REMOVE"),
+        )
+        for path, job, instruction in jobs:
+            activity.feed(cmd(
+                "propagator",
+                f'Starting CSyncEnums::CSYNC_INSTRUCTION_{instruction} propagation of "{path}" by OCC::{job}(0x1234)',
+            ))
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.APPLYING, 0, 4))
+
+        for completed, (path, job, _) in enumerate(jobs, 1):
+            confirmation = cmd(
+                "propagator",
+                f'Completed propagation of "{path}" by OCC::{job}(0x1234) with status OCC::SyncFileItem::Success',
+            )
+            activity.feed(confirmation)
+            activity.feed(confirmation)
+            self.assertEqual(activity.progress(), SyncProgress(SyncPhase.APPLYING, completed, 4 - completed))
+
+        activity.feed(POST_RECONCILE)
+        activity.feed(RUN_DONE)
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.FINALIZING, 4, 0))
+
+    def test_live_progress_uses_bulk_confirmations_and_clears_failed_attempts(self) -> None:
+        activity = ActivityCapture()
+        started = cmd(
+            "propagator",
+            'Starting CSyncEnums::CSYNC_INSTRUCTION_NEW propagation of "upload.txt" by OCC::PropagateUploadFileNG(0x1)',
+        )
+        activity.feed(started)
+        activity.feed(started)
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.APPLYING, 0, 1))
+        activity.feed(cmd(
+            "propagator",
+            'Could not complete propagation of "upload.txt" by OCC::PropagateUploadFileNG(0x1) with status OCC::SyncFileItem::SoftError',
+        ))
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.APPLYING, 0, 0))
+        activity.feed(cmd(
+            "propagator",
+            'Completed propagation of "upload.txt" by OCC::BulkPropagatorJob(0x2) with status OCC::SyncFileItem::Success',
+        ))
+        activity.feed(cmd(
+            "propagator.bulkupload",
+            'Item completed "upload.txt" OCC::SyncFileItem::Success CSyncEnums::CSYNC_INSTRUCTION_NEW ""',
+        ))
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.APPLYING, 1, 0))
+
+        activity.feed('[ debug default ]: Restarting Sync, because another sync is needed 1')
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.CHECKING, 1, 0))
+        activity.feed(started)
+        self.assertEqual(activity.progress(), SyncProgress(SyncPhase.APPLYING, 1, 0))
+
     def test_uses_confirmations_not_attempts_and_preserves_literal_paths(self) -> None:
         activity = ActivityCapture()
         for line in (

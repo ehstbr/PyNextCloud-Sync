@@ -13,7 +13,7 @@ ROOT = Path(__file__).parents[2]
 
 class PackagingTests(unittest.TestCase):
     def test_release_version_is_consistent_across_package_metadata(self) -> None:
-        expected = "0.1.38"
+        expected = "0.1.43"
         for relative_path in (
             "src/pynextcloud_sync/__init__.py",
             "pyproject.toml",
@@ -31,7 +31,7 @@ class PackagingTests(unittest.TestCase):
     def test_repository_update_manifest_matches_the_release(self) -> None:
         payload = json.loads((ROOT / "version.json").read_text(encoding="utf-8"))
         self.assertEqual(payload["schema_version"], 1)
-        self.assertEqual(payload["version"], "0.1.38")
+        self.assertEqual(payload["version"], "0.1.43")
         self.assertIs(type(payload["mandatory"]), bool)
         self.assertTrue(payload["summary"].strip())
         self.assertGreater(len(payload["changelog"]), 0)
@@ -60,6 +60,7 @@ class PackagingTests(unittest.TestCase):
         self.assertIn('"$runtime_root"/[0-9]*/bus', preinst)
         self.assertIn("org.freedesktop.DBus.NameHasOwner", preinst)
         self.assertNotIn("gapplication list-apps", preinst)
+        self.assertIn('gapplication action "$app_id" quit-for-update', preinst)
         self.assertIn('gapplication action "$app_id" quit', preinst)
         self.assertIn('while app_is_running "$session_uid"', preinst)
         self.assertNotIn("pkill", preinst)
@@ -112,6 +113,7 @@ case "$1" in
         exit 0
         ;;
     action)
+        [ "$3" = "quit" ] || exit 2
         mv "$PYNEXTCLOUD_TEST_APP_STATE" "$PYNEXTCLOUD_TEST_APP_STATE.stopped"
         ;;
     *)

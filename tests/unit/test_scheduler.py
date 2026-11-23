@@ -30,8 +30,8 @@ class FakeGLib:
         return source_id
 
     @classmethod
-    def idle_add(cls, callback: object) -> int:
-        return cls._add(callback)
+    def idle_add(cls, callback: object, *args: object) -> int:
+        return cls._add(lambda: callback(*args))
 
     @classmethod
     def timeout_add(cls, _milliseconds: int, callback: object, *args: object) -> int:
@@ -229,6 +229,47 @@ class SchedulerTests(unittest.TestCase):
 
         scheduler.authentication_restored()
         self.assertFalse(scheduler.authentication_required)
+
+    def test_shutdown_rejects_new_runs_and_late_credential_callbacks(self) -> None:
+        module = load_scheduler_module()
+        credentials = FakeCredentials()
+        engine = FakeEngine()
+        state = StateController(AppState.IDLE_OK)
+        scheduler = module.SyncScheduler(self._config(), credentials, engine, state, FakeLogger())
+        scheduler.request(Trigger.MANUAL)
+        FakeGLib.run_source(scheduler._start_source)
+        self.assertEqual(state.snapshot.state, AppState.SYNC_QUEUED)
+        scheduler.request(Trigger.REMOTE_INTERVAL)
+
+        scheduler.prepare_shutdown()
+        credentials.callbacks[0]("secret", None)
+        scheduler.request(Trigger.MANUAL)
+        scheduler.request(Trigger.LOCAL_INOTIFY)
+        self.assertFalse(FakeGLib.callbacks)
+        self.assertFalse(scheduler.queue)
+        self.assertEqual(engine.runs, [])
+        self.assertFalse(scheduler.busy)
+        self.assertEqual(state.snapshot.state, AppState.IDLE_OK)
+
+    def test_shutdown_waits_for_the_baseline_and_can_cancel_the_active_process(self) -> None:
+        module = load_scheduler_module()
+        engine = FakeEngine()
+        scheduler = module.SyncScheduler(
+            self._config(), FakeCredentials(), engine, StateController(AppState.IDLE_OK), FakeLogger()
+        )
+        engine.running = True
+        scheduler.request(Trigger.LOCAL_INOTIFY)
+        scheduler.prepare_shutdown(cancel_sync=True)
+        self.assertTrue(engine.cancelled)
+        self.assertTrue(scheduler.busy)
+        self.assertFalse(scheduler.queue)
+
+        engine.running = False
+        scheduler._baseline_recording = True
+        self.assertTrue(scheduler.busy)
+        FakeGLib.run_source(FakeGLib.idle_add(scheduler._baseline_recorded, True))
+        self.assertFalse(scheduler.busy)
+        self.assertFalse(FakeGLib.callbacks)
 
 
 if __name__ == "__main__":
