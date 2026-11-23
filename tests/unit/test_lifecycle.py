@@ -180,7 +180,8 @@ class LifecycleContractTests(unittest.TestCase):
         dispose = method_source(path, "MainWindow", "_dispose_ui")
         self.assertIn("self._dispose_ui()", close_handler)
         self.assertIn("self._state_unsubscribe()", dispose)
-        self.assertIn("self._log_unsubscribe()", dispose)
+        self.assertIn("self._history_unsubscribe()", dispose)
+        self.assertIn("self.history_window.close()", dispose)
 
     def test_log_and_sync_output_have_explicit_memory_limits(self) -> None:
         log_view = (ROOT / "src" / "pynextcloud_sync" / "ui" / "log_view.py").read_text(
