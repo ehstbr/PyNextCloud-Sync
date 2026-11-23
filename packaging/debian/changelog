@@ -1,3 +1,42 @@
+pynextcloud-sync (0.1.43) stable; urgency=medium
+
+  * Divides the synchronization bar into the operations reported so far.
+  * Uses a continuous bar when the operations no longer fit as individual segments.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 01:51:07 +0000
+
+pynextcloud-sync (0.1.42) stable; urgency=medium
+
+  * Shows one progress bar for reported file operations.
+  * Displays analysis and finalization as status text and hides the bar on runs without reported changes.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 01:33:23 +0000
+
+pynextcloud-sync (0.1.41) stable; urgency=medium
+
+  * Marks each confirmed file operation in the synchronization progress bar.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 01:14:55 +0000
+
+pynextcloud-sync (0.1.40) stable; urgency=medium
+
+  * Shows the current synchronization stage and reported operations in the status card.
+  * Adds a Close Application button to the optional update notice.
+  * Stops the active synchronization when quitting with the update notice open.
+  * Shows when the application is closing.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 01:03:35 +0000
+
+pynextcloud-sync (0.1.39) stable; urgency=medium
+
+  * Stops scheduling new synchronization runs after an exit request.
+  * Waits for the active process and safety baseline before closing.
+  * Lets the package installer stop an active sync before upgrading.
+  * Releases synchronization state when a finished command leaves its output pipe open.
+  * Retains the last committed safety baseline when synchronization is interrupted.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Mon, 23 Nov 2026 00:30:43 +0000
+
 pynextcloud-sync (0.1.38) stable; urgency=medium
 
   * Places Recent Activity below the account, local folder, and storage information.

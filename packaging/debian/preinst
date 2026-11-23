@@ -72,10 +72,13 @@ for session_bus in "$runtime_root"/[0-9]*/bus; do
     printf '%s\n' "$session_uid" >> "$restart_file"
 
     if ! run_in_session "$session_uid" \
-        gapplication action "$app_id" quit >/dev/null 2>&1; then
-        echo "Could not request PyNextCloud Sync to quit in user session $session_uid." >&2
-        echo "Close it and retry the upgrade." >&2
-        exit 1
+        gapplication action "$app_id" quit-for-update >/dev/null 2>&1; then
+        if ! run_in_session "$session_uid" \
+            gapplication action "$app_id" quit >/dev/null 2>&1; then
+            echo "Could not request PyNextCloud Sync to quit in user session $session_uid." >&2
+            echo "Close it and retry the upgrade." >&2
+            exit 1
+        fi
     fi
 
     remaining=300

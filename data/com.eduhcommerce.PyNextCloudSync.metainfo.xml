@@ -15,6 +15,48 @@
   <url type="bugtracker">https://github.com/ehstbr/PyNextCloud-Sync/issues</url>
   <url type="vcs-browser">https://github.com/ehstbr/PyNextCloud-Sync</url>
   <releases>
+    <release version="0.1.43" date="2026-11-22">
+      <description>
+        <ul>
+          <li>Sizes the synchronization bar to the reported file operations.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.42" date="2026-11-22">
+      <description>
+        <ul>
+          <li>Shows one progress bar for reported file operations.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.41" date="2026-11-22">
+      <description>
+        <ul>
+          <li>Marks each confirmed file operation in the synchronization progress bar.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.40" date="2026-11-22">
+      <description>
+        <ul>
+          <li>Shows the current synchronization stage and reported operations in the status card.</li>
+          <li>Adds a Close Application button to the optional update notice.</li>
+          <li>Stops the active synchronization when quitting with the update notice open.</li>
+          <li>Shows when the application is closing.</li>
+        </ul>
+      </description>
+    </release>
+    <release version="0.1.39" date="2026-11-22">
+      <description>
+        <ul>
+          <li>Stops scheduling new synchronization runs after an exit request.</li>
+          <li>Waits for the active process and safety baseline before closing.</li>
+          <li>Lets the package installer stop an active sync before upgrading.</li>
+          <li>Releases synchronization state when a finished command leaves its output pipe open.</li>
+          <li>Retains the last committed safety baseline when synchronization is interrupted.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.38" date="2026-11-17">
       <description>
         <ul>
