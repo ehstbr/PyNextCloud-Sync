@@ -1,6 +1,6 @@
 project(
   'pynextcloud-sync',
-  version: '0.1.45',
+  version: '0.1.46',
   meson_version: '>= 1.0.0',
 )
 
@@ -200,6 +200,12 @@ install_data(
 install_subdir(
   'src/pynextcloud_sync/icons',
   install_dir: python.get_install_dir(pure: true, subdir: 'pynextcloud_sync'),
+)
+
+# GNOME Shell resolves D-Bus menu icon names in the system theme.
+install_subdir(
+  'src/pynextcloud_sync/icons/hicolor/scalable/apps',
+  install_dir: join_paths(get_option('datadir'), 'icons', 'hicolor', 'scalable'),
 )
 
 install_data(

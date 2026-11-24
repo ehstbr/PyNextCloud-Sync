@@ -1,11 +1,10 @@
 {
   "schema_version": 1,
-  "version": "0.1.45",
+  "version": "0.1.46",
   "mandatory": false,
-  "released_at": "2026-11-23T17:28:48Z",
-  "summary": "Debian packaging supports either GNOME Keyring or KWallet for credential storage.",
+  "released_at": "2026-11-24T02:02:08Z",
+  "summary": "Restores the PyNextCloud Sync tray menu icons on GNOME.",
   "changelog": [
-    "Recommends GNOME Keyring or KWallet for the desktop Secret Service.",
-    "Makes the GNOME AppIndicator extension an optional package suggestion."
+    "Restores the system tray menu icons on GNOME with AppIndicator."
   ]
 }

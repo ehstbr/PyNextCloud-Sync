@@ -13,7 +13,7 @@
     <a href="https://github.com/ehstbr/PyNextCloud-Sync/issues">Report an issue</a>
   </p>
   <p>
-    <img src="https://img.shields.io/badge/version-0.1.45-6557e8?style=flat-square" alt="Version 0.1.45">
+    <img src="https://img.shields.io/badge/version-0.1.46-6557e8?style=flat-square" alt="Version 0.1.46">
     <img src="https://img.shields.io/badge/platform-Linux-f0c674?style=flat-square&logo=linux&logoColor=111" alt="Linux">
     <img src="https://img.shields.io/badge/desktop-GNOME-4a86cf?style=flat-square&logo=gnome&logoColor=white" alt="GNOME">
     <img src="https://img.shields.io/badge/GTK-4-4a86cf?style=flat-square&logo=gtk&logoColor=white" alt="GTK 4">
@@ -117,7 +117,7 @@ Download the `.deb` from the [latest release](https://github.com/ehstbr/PyNextCl
 ```bash
 cd ~/Downloads
 sudo apt update
-sudo apt install ./pynextcloud-sync_0.1.45_all.deb
+sudo apt install ./pynextcloud-sync_0.1.46_all.deb
 ```
 
 During an interactive upgrade started with `sudo apt install`, the package asks a running PyNextCloud Sync instance to quit normally, waits for any current synchronization to finish, and restarts the updated application in the same desktop session. It never force-kills the synchronization process. Non-interactive upgrades or installations without an identifiable desktop session leave process control to the user or system administrator.
@@ -142,8 +142,8 @@ sudo apt install \
 Then extract and run:
 
 ```bash
-unzip PyNextCloud-Sync-0.1.45.zip
-cd PyNextCloud-Sync-0.1.45
+unzip PyNextCloud-Sync-0.1.46.zip
+cd PyNextCloud-Sync-0.1.46
 ./run.sh
 ```
 
@@ -271,7 +271,7 @@ Contributions are welcome when they preserve the project's narrow scope, low idl
 
 ## Project status
 
-Version `0.1.45` is a development release intended for evaluation. Test it with non-critical data before relying on it for regular synchronization, and always keep independent backups of important files.
+Version `0.1.46` is a development release intended for evaluation. Test it with non-critical data before relying on it for regular synchronization, and always keep independent backups of important files.
 
 ---
 

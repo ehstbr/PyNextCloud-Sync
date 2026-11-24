@@ -61,6 +61,8 @@ install -m 0755 "$project_root/packaging/debian/pynextcloud-sync" "$package_root
 install -m 0644 "$project_root/data/com.eduhcommerce.PyNextCloudSync.desktop" "$package_root/usr/share/applications/"
 install -m 0644 "$project_root/data/com.eduhcommerce.PyNextCloudSync.metainfo.xml" "$package_root/usr/share/metainfo/"
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync.svg" "$package_root/usr/share/icons/hicolor/scalable/apps/"
+# GNOME Shell resolves D-Bus menu icon names in the system theme.
+install -m 0644 "$source_dir/icons/hicolor/scalable/apps/"*.svg "$package_root/usr/share/icons/hicolor/scalable/apps/"
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync-symbolic.svg" "$package_root/usr/share/icons/hicolor/symbolic/apps/"
 install -m 0644 "$project_root/data/icons/com.eduhcommerce.PyNextCloudSync-folder.svg" "$package_root/usr/share/icons/hicolor/scalable/places/"
 

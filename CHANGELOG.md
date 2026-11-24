@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.46 — 2026-11-23
+
+- Restores the system tray menu icons on GNOME with AppIndicator.
+
 ## 0.1.45 — 2026-11-23
 
 - Recommends GNOME Keyring or KWallet for the desktop Secret Service.

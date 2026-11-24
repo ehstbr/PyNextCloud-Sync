@@ -1,3 +1,9 @@
+pynextcloud-sync (0.1.46) stable; urgency=medium
+
+  * Restores the system tray menu icons on GNOME with AppIndicator.
+
+ -- EduhCommerce <eduhcommerce@users.noreply.github.com>  Tue, 24 Nov 2026 02:02:08 +0000
+
 pynextcloud-sync (0.1.45) stable; urgency=medium
 
   * Recommends GNOME Keyring or KWallet for the desktop Secret Service.

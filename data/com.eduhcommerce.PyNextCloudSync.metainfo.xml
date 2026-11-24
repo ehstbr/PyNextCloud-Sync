@@ -15,6 +15,13 @@
   <url type="bugtracker">https://github.com/ehstbr/PyNextCloud-Sync/issues</url>
   <url type="vcs-browser">https://github.com/ehstbr/PyNextCloud-Sync</url>
   <releases>
+    <release version="0.1.46" date="2026-11-23">
+      <description>
+        <ul>
+          <li>Restores the system tray menu icons on GNOME with AppIndicator.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.45" date="2026-11-23">
       <description>
         <ul>
