@@ -31,6 +31,12 @@ def terms_text() -> str:
 def release_notes_markup() -> str:
     sections = [
         (
+            _("Version 0.1.46"),
+            [
+                _("Restores the system tray menu icons on GNOME with AppIndicator."),
+            ],
+        ),
+        (
             _("Version 0.1.45"),
             [
                 _("Recommends GNOME Keyring or KWallet for the desktop Secret Service."),
